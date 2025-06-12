@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Ranking System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    .input-container input {
+      padding: 8px;
+      font-size: 16px;
+      width: 200px;
+      margin-right: 10px;
+    }
+    .input-container button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .output {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .performance {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    .performance span {
+      font-weight: bold;
+    }
+    .participants {
+      margin-top: 20px;
+    }
+    .participants ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .participants li {
+      padding: 5px;
+      font-size: 14px;
+      background-color: #e3e3e3;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Event Ranking System</h1>
+
+  <div class="container">
+    <div class="input-container">
+      <input type="number" id="scoreInput" placeholder="Enter score" />
+      <input type="text" id="nameInput" placeholder="Enter participant name" />
+      <button onclick="addParticipant()">Add Participant</button>
+    </div>
+    <button onclick="rankParticipants()">Rank Participants</button>
+  </div>
+
+  <div class="output">
+    <p id="status"></p>
+  </div>
+
+  <div class="performance">
+    <p>Heap Sort Time: <span id="heapTime">0</span> ms</p>
+  </div>
+
+  <div class="participants">
+    <h2>Participants Ranking:</h2>
+    <ul id="participantList"></ul>
+  </div>
+
+  <script>
+    // Array to store participants {name, score}
+    let participants = [];
+
+    // Function to add a participant
+    function addParticipant() {
+      const name = document.getElementById('nameInput').value.trim();
+      const score = parseInt(document.getElementById('scoreInput').value.trim(), 10);
+
+      if (name && !isNaN(score)) {
+        participants.push({ name, score });
+        document.getElementById('nameInput').value = ''; // Clear the input field
+        document.getElementById('scoreInput').value = ''; // Clear the score field
+        displayParticipants();
+      } else {
+        alert('Please enter a valid participant name and score.');
+      }
+    }
+
+    // Display participants in the list
+    function displayParticipants() {
+      const participantList = document.getElementById('participantList');
+      participantList.innerHTML = '';
+      participants.forEach(participant => {
+        const li = document.createElement('li');
+        li.textContent = `${participant.name}: ${participant.score}`;
+        participantList.appendChild(li);
+      });
+    }
+
+    // Heap Sort Implementation to rank participants
+    function heapSort(arr) {
+      const start = performance.now();
+
+      let n = arr.length;
+
+      // Build a max heap
+      for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+        heapify(arr, n, i);
+      }
+
+      // Extract elements from the heap
+      for (let i = n - 1; i > 0; i--) {
+        // Move current root to end
+        [arr[0], arr[i]] = [arr[i], arr[0]];
+
+        // Call heapify on the reduced heap
+        heapify(arr, i, 0);
+      }
+
+      const end = performance.now();
+      return { sorted: arr, time: end - start };
+    }
+
+    // Helper function to heapify a subtree rooted at index i
+    function heapify(arr, n, i) {
+      let largest = i;
+      let left = 2 * i + 1;
+      let right = 2 * i + 2;
+
+      if (left < n && arr[left].score > arr[largest].score) {
+        largest = left;
+      }
+
+      if (right < n && arr[right].score > arr[largest].score) {
+        largest = right;
+      }
+
+      if (largest !== i) {
+        [arr[i], arr[largest]] = [arr[largest], arr[i]];
+        heapify(arr, n, largest);
+      }
+    }
+
+    // Function to rank the participants using Heap Sort
+    function rankParticipants() {
+      if (participants.length === 0) {
+        document.getElementById('status').textContent = 'No participants to rank.';
+        return;
+      }
+
+      // Perform Heap Sort
+      const heapResult = heapSort([...participants]);
+      document.getElementById('heapTime').textContent = heapResult.time.toFixed(2);
+
+      // Update participants list with rankings
+      participants = heapResult.sorted;
+      displayParticipants();
+
+      // Add rankings
+      const participantList = document.getElementById('participantList');
+      participantList.innerHTML = '';
+      participants.forEach((participant, index) => {
+        const li = document.createElement('li');
+        li.textContent = `Rank ${index + 1}: ${participant.name} - Score: ${participant.score}`;
+        participantList.appendChild(li);
+      });
+
+      document.getElementById('status').textContent = 'Participants ranked successfully!';
+    }
+
+    // Simulate adding a large number of participants
+    function generateLargeDataset() {
+      const largeDataset = [];
+      for (let i = 0; i < 1000; i++) {
+        const name = `Participant ${i + 1}`;
+        const score = Math.floor(Math.random() * 1000); // Random score between 0 and 999
+        largeDataset.push({ name, score });
+      }
+      participants = largeDataset;
+      displayParticipants();
+    }
+
+    // Uncomment the next line to generate a large dataset automatically
+    // generateLargeDataset();
+  </script>
+
+</body>
+</html>

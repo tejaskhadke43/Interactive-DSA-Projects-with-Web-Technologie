@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Block Allocation Simulation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .memory-block {
+      background-color: #e0e0e0;
+      padding: 8px;
+      margin: 5px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .allocated {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .free {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    .controls button {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .controls button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Memory Block Allocation</h2>
+
+  <div id="memory-list">
+    <!-- Memory blocks will be displayed here -->
+  </div>
+
+  <div class="controls">
+    <button onclick="allocateMemory(10)">Allocate 10 units</button>
+    <button onclick="allocateMemory(20)">Allocate 20 units</button>
+    <button onclick="deallocateMemory(10)">Deallocate 10 units</button>
+    <button onclick="deallocateMemory(20)">Deallocate 20 units</button>
+    <button onclick="runGarbageCollection()">Run Garbage Collection</button>
+  </div>
+
+  <div class="status" id="status">
+    <!-- Status messages will be displayed here -->
+  </div>
+</div>
+
+<script>
+  // MemoryBlock class represents a single memory block in the list
+  class MemoryBlock {
+    constructor(size) {
+      this.size = size;    // Size of the memory block
+      this.allocated = false; // Whether the block is allocated or free
+      this.next = null;    // Pointer to the next memory block in the list
+    }
+  }
+
+  // MemoryManager class handles memory allocation, deallocation, and garbage collection
+  class MemoryManager {
+    constructor() {
+      this.head = null;   // The head of the singly linked list (first memory block)
+      this.tail = null;   // The tail of the singly linked list (last memory block)
+    }
+
+    // Allocate a new memory block
+    allocateMemory(size) {
+      const newBlock = new MemoryBlock(size);
+      if (!this.head) {
+        // If this is the first block, it becomes both the head and tail
+        this.head = newBlock;
+        this.tail = newBlock;
+      } else {
+        // Add the new block to the end of the list
+        this.tail.next = newBlock;
+        this.tail = newBlock;
+      }
+      this.updateMemoryDisplay();
+    }
+
+    // Deallocate a memory block by size (find and mark the block as free)
+    deallocateMemory(size) {
+      let current = this.head;
+      while (current) {
+        if (current.size === size && current.allocated) {
+          current.allocated = false;
+          this.updateMemoryDisplay();
+          return;
+        }
+        current = current.next;
+      }
+      alert(`No allocated block of size ${size} found.`);
+    }
+
+    // Run garbage collection to release free memory blocks
+    runGarbageCollection() {
+      let current = this.head;
+      let prev = null;
+      while (current) {
+        if (!current.allocated) {
+          if (prev) {
+            prev.next = current.next;
+          } else {
+            this.head = current.next; // If the first block is free, move head forward
+          }
+          // If the current block is the last one, update the tail
+          if (!current.next) {
+            this.tail = prev;
+          }
+        } else {
+          prev = current;
+        }
+        current = current.next;
+      }
+      this.updateMemoryDisplay();
+    }
+
+    // Update the display of memory blocks
+    updateMemoryDisplay() {
+      const memoryListContainer = document.getElementById('memory-list');
+      memoryListContainer.innerHTML = '';
+
+      let current = this.head;
+      while (current) {
+        const blockElement = document.createElement('div');
+        blockElement.className = `memory-block ${current.allocated ? 'allocated' : 'free'}`;
+        blockElement.textContent = `Size: ${current.size} units - ${current.allocated ? 'Allocated' : 'Free'}`;
+
+        memoryListContainer.appendChild(blockElement);
+        current = current.next;
+      }
+    }
+  }
+
+  // Initialize the memory manager
+  const memoryManager = new MemoryManager();
+
+  // Functions for interacting with the memory manager
+  function allocateMemory(size) {
+    memoryManager.allocateMemory(size);
+  }
+
+  function deallocateMemory(size) {
+    memoryManager.deallocateMemory(size);
+  }
+
+  function runGarbageCollection() {
+    memoryManager.runGarbageCollection();
+  }
+
+  // Initialize with a few blocks for testing
+  memoryManager.allocateMemory(10);
+  memoryManager.allocateMemory(20);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Streaming Playlist</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .playlist {
+      margin: 20px 0;
+      padding: 10px;
+      background-color: #fafafa;
+      border-radius: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .song {
+      background-color: #e0e0e0;
+      padding: 8px 16px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .song.active {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .controls button {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .controls button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Music Streaming Playlist</h2>
+
+  <div class="playlist" id="playlist">
+    <!-- Songs will be dynamically added here -->
+  </div>
+
+  <div class="controls">
+    <button onclick="addSong()">Add Song</button>
+    <button onclick="skipSong()">Skip Song</button>
+    <button onclick="replaySong()">Replay Song</button>
+  </div>
+</div>
+
+<script>
+  // SongNode class representing each song in the playlist
+  class SongNode {
+    constructor(title) {
+      this.title = title;
+      this.next = null;
+      this.prev = null;
+    }
+  }
+
+  // Playlist class to manage the circular doubly linked list
+  class Playlist {
+    constructor() {
+      this.head = null;
+      this.tail = null;
+      this.currentSong = null;
+      this.songCount = 0;
+    }
+
+    // Add a new song to the playlist
+    addSong(title) {
+      const newSong = new SongNode(title);
+
+      if (this.songCount === 0) {
+        this.head = newSong;
+        this.tail = newSong;
+        this.head.next = this.head; // Circular link
+        this.head.prev = this.tail; // Circular link
+        this.currentSong = this.head; // The first song is playing by default
+      } else {
+        this.tail.next = newSong;
+        newSong.prev = this.tail;
+        newSong.next = this.head; // Circular link
+        this.head.prev = newSong; // Circular link
+        this.tail = newSong; // Update tail to new song
+      }
+
+      this.songCount++;
+      this.updatePlaylistDisplay();
+    }
+
+    // Skip to the next song
+    skipSong() {
+      if (this.currentSong) {
+        this.currentSong = this.currentSong.next;
+        this.updatePlaylistDisplay();
+      }
+    }
+
+    // Replay the current song
+    replaySong() {
+      if (this.currentSong) {
+        this.updatePlaylistDisplay();
+      }
+    }
+
+    // Update the display of the playlist and highlight the current song
+    updatePlaylistDisplay() {
+      const playlistContainer = document.getElementById('playlist');
+      playlistContainer.innerHTML = ''; // Clear the playlist display
+
+      let currentSong = this.head;
+      while (currentSong) {
+        const songElement = document.createElement('div');
+        songElement.className = 'song';
+        songElement.textContent = currentSong.title;
+
+        if (currentSong === this.currentSong) {
+          songElement.classList.add('active');
+        }
+
+        playlistContainer.appendChild(songElement);
+
+        // If the next song is the head, stop the loop (because it's circular)
+        if (currentSong.next === this.head) {
+          break;
+        }
+
+        currentSong = currentSong.next;
+      }
+    }
+  }
+
+  // Initialize the playlist manager
+  const playlistManager = new Playlist();
+
+  // Function to add a song to the playlist
+  function addSong() {
+    const songTitle = prompt('Enter song title:');
+    if (songTitle) {
+      playlistManager.addSong(songTitle);
+    }
+  }
+
+  // Function to skip the current song
+  function skipSong() {
+    playlistManager.skipSong();
+  }
+
+  // Function to replay the current song
+  function replaySong() {
+    playlistManager.replaySong();
+  }
+
+  // Initial song to start the playlist
+  playlistManager.addSong('Song 1');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Collaborative Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f9;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 600px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      height: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .buttons button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Real-Time Collaborative Editor</h2>
+  <textarea id="editor" placeholder="Start typing..." oninput="trackEdit()"></textarea>
+
+  <div class="buttons">
+    <button id="undoButton" onclick="undo()" disabled>Undo</button>
+    <button id="redoButton" onclick="redo()" disabled>Redo</button>
+  </div>
+
+  <div class="status" id="statusMessage">No edits yet.</div>
+</div>
+
+<script>
+  class EditNode {
+    constructor(content, user) {
+      this.content = content; // The text content after the edit
+      this.user = user;       // The user who made the edit
+      this.prev = null;       // Pointer to previous edit
+      this.next = null;       // Pointer to next edit
+    }
+  }
+
+  class CollaborativeEditor {
+    constructor() {
+      this.head = null;       // Head of the doubly linked list
+      this.tail = null;       // Tail of the doubly linked list
+      this.current = null;    // Current position in the history
+      this.users = ['User1', 'User2', 'User3']; // Example users
+      this.currentUser = this.users[0]; // Set the first user as default
+    }
+
+    // Add a new edit (create a new node in the doubly linked list)
+    addEdit(content) {
+      const newEdit = new EditNode(content, this.currentUser);
+
+      if (!this.head) {
+        this.head = newEdit;
+        this.tail = newEdit;
+        this.current = newEdit;
+      } else {
+        this.tail.next = newEdit;
+        newEdit.prev = this.tail;
+        this.tail = newEdit;
+        this.current = newEdit;
+      }
+
+      this.updateButtons();
+    }
+
+    // Undo the last edit (move backwards in the history)
+    undo() {
+      if (this.current && this.current.prev) {
+        this.current = this.current.prev;
+        document.getElementById('editor').value = this.current.content;
+        this.updateButtons();
+        this.updateStatus('Undo');
+      }
+    }
+
+    // Redo the next edit (move forwards in the history)
+    redo() {
+      if (this.current && this.current.next) {
+        this.current = this.current.next;
+        document.getElementById('editor').value = this.current.content;
+        this.updateButtons();
+        this.updateStatus('Redo');
+      }
+    }
+
+    // Update the undo/redo buttons' states based on the current position
+    updateButtons() {
+      document.getElementById('undoButton').disabled = !this.current || !this.current.prev;
+      document.getElementById('redoButton').disabled = !this.current || !this.current.next;
+    }
+
+    // Update the status message with the action (undo/redo)
+    updateStatus(action) {
+      const statusMessage = `Last action: ${action} by ${this.current.user}`;
+      document.getElementById('statusMessage').textContent = statusMessage;
+    }
+
+    // Track the user's input in the editor and create a new edit node
+    trackEdit() {
+      const content = document.getElementById('editor').value;
+
+      // Only add a new edit if the content has changed (not the same as the current)
+      if (!this.current || this.current.content !== content) {
+        this.addEdit(content);
+      }
+    }
+  }
+
+  const editor = new CollaborativeEditor();
+
+  // Add an initial empty edit to represent the starting state
+  editor.addEdit('');
+
+  // Simulate real-time collaboration by switching users
+  let currentUserIndex = 0;
+  setInterval(() => {
+    currentUserIndex = (currentUserIndex + 1) % editor.users.length;
+    editor.currentUser = editor.users[currentUserIndex];
+  }, 5000); // Change the user every 5 seconds for demonstration
+
+  // Event handlers for undo/redo
+  function undo() {
+    editor.undo();
+  }
+
+  function redo() {
+    editor.redo();
+  }
+
+  // Track the user's changes in the editor
+  function trackEdit() {
+    editor.trackEdit();
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0/1 Knapsack Problem</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: left;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>0/1 Knapsack Problem</h1>
+        <label for="weightInput">Weight:</label>
+        <input type="number" id="weightInput" placeholder="Enter weight">
+        <label for="valueInput">Value:</label>
+        <input type="number" id="valueInput" placeholder="Enter value">
+        <button onclick="addItem()">Add Item</button>
+        <label for="capacityInput">Knapsack Capacity:</label>
+        <input type="number" id="capacityInput" placeholder="Enter capacity">
+        <button onclick="solveKnapsack()">Solve</button>
+        <div class="output">
+            <h2>Items</h2>
+            <table id="itemsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Weight</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <h2>Optimal Solution</h2>
+            <div id="solution"></div>
+            <h3>Maximum Value: <span id="maxValue">0</span></h3>
+        </div>
+    </div>
+    <script>
+        const items = [];
+
+        // Add an item to the list
+        function addItem() {
+            const weight = parseInt(document.getElementById("weightInput").value, 10);
+            const value = parseInt(document.getElementById("valueInput").value, 10);
+
+            if (isNaN(weight) || isNaN(value) || weight <= 0 || value <= 0) {
+                alert("Please enter valid weight and value.");
+                return;
+            }
+
+            items.push({ weight, value });
+            document.getElementById("weightInput").value = "";
+            document.getElementById("valueInput").value = "";
+
+            updateItemsTable();
+        }
+
+        // Update the items table
+        function updateItemsTable() {
+            const tbody = document.querySelector("#itemsTable tbody");
+            tbody.innerHTML = "";
+            items.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.weight}</td>
+                    <td>${item.value}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Solve the 0/1 Knapsack problem using Dynamic Programming
+        function solveKnapsack() {
+            const capacity = parseInt(document.getElementById("capacityInput").value, 10);
+
+            if (isNaN(capacity) || capacity <= 0) {
+                alert("Please enter a valid knapsack capacity.");
+                return;
+            }
+
+            const n = items.length;
+            const dp = Array.from({ length: n + 1 }, () => Array(capacity + 1).fill(0));
+
+            // Build the DP table
+            for (let i = 1; i <= n; i++) {
+                for (let w = 1; w <= capacity; w++) {
+                    if (items[i - 1].weight <= w) {
+                        dp[i][w] = Math.max(
+                            dp[i - 1][w], // Exclude the item
+                            dp[i - 1][w - items[i - 1].weight] + items[i - 1].value // Include the item
+                        );
+                    } else {
+                        dp[i][w] = dp[i - 1][w];
+                    }
+                }
+            }
+
+            // Backtrack to find the items included in the optimal solution
+            let w = capacity;
+            const solution = [];
+            for (let i = n; i > 0 && w > 0; i--) {
+                if (dp[i][w] !== dp[i - 1][w]) {
+                    solution.push(items[i - 1]);
+                    w -= items[i - 1].weight;
+                }
+            }
+
+            displaySolution(dp[n][capacity], solution);
+        }
+
+        // Display the solution
+        function displaySolution(maxValue, solution) {
+            const solutionDiv = document.getElementById("solution");
+            const maxValueSpan = document.getElementById("maxValue");
+
+            solutionDiv.innerHTML = solution
+                .map((item, index) => `Item ${index + 1}: Weight=${item.weight}, Value=${item.value}`)
+                .join("<br>");
+            maxValueSpan.textContent = maxValue;
+        }
+    </script>
+</body>
+</html>

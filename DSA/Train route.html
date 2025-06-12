@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Train Route Simulation (Circular Linked List)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f9;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .train-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .train-form input, .train-form button {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .station-list {
+      margin-top: 20px;
+    }
+
+    .station-list ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .station-list li {
+      background-color: #e0e0e0;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .station-list li span {
+      font-weight: bold;
+    }
+
+    .status {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Train Route Simulation</h2>
+  <div class="train-form">
+    <input type="text" id="stationName" placeholder="Station Name" />
+    <button onclick="addStation()">Add Station</button>
+    <button onclick="removeStation()">Remove Station</button>
+    <button onclick="moveTrain()">Move Train</button>
+  </div>
+
+  <div class="station-list">
+    <h3>Train Route</h3>
+    <ul id="stationList"></ul>
+  </div>
+
+  <div class="status">
+    <p id="statusMessage">No train movement yet.</p>
+  </div>
+</div>
+
+<script>
+  class Station {
+    constructor(name) {
+      this.name = name;
+      this.next = null;
+    }
+  }
+
+  class TrainRoute {
+    constructor() {
+      this.head = null;
+      this.current = null;
+    }
+
+    // Add station to the route (circular linked list)
+    addStation(name) {
+      const newStation = new Station(name);
+
+      if (!this.head) {
+        // If the list is empty, create a circular link
+        this.head = newStation;
+        this.head.next = this.head; // Points to itself
+        this.current = this.head;  // Train starts at the head
+      } else {
+        // Traverse to the last station in the list
+        let temp = this.head;
+        while (temp.next !== this.head) {
+          temp = temp.next;
+        }
+        temp.next = newStation;
+        newStation.next = this.head; // Make the list circular
+      }
+    }
+
+    // Remove a station from the route
+    removeStation(name) {
+      if (!this.head) {
+        alert("No stations to remove.");
+        return;
+      }
+
+      // Special case: removing the head station
+      if (this.head.name === name) {
+        if (this.head.next === this.head) {
+          this.head = null;  // Only one station left, now empty
+          this.current = null;
+        } else {
+          let temp = this.head;
+          while (temp.next !== this.head) {
+            temp = temp.next;
+          }
+          this.head = this.head.next;  // Move head to next station
+          temp.next = this.head;       // Make the list circular again
+        }
+        return;
+      }
+
+      // General case: traverse to find the station to remove
+      let temp = this.head;
+      while (temp.next !== this.head && temp.next.name !== name) {
+        temp = temp.next;
+      }
+
+      if (temp.next === this.head) {
+        alert("Station not found.");
+      } else {
+        temp.next = temp.next.next;  // Bypass the node to remove it
+      }
+    }
+
+    // Move the train to the next station
+    moveTrain() {
+      if (!this.head) {
+        document.getElementById('statusMessage').textContent = "No stations in the route!";
+        return;
+      }
+
+      this.current = this.current.next;  // Move to the next station
+      document.getElementById('statusMessage').textContent = `Train is at ${this.current.name}.`;
+    }
+
+    // Get the list of stations
+    getStations() {
+      const stations = [];
+      if (!this.head) return stations;
+
+      let current = this.head;
+      do {
+        stations.push(current);
+        current = current.next;
+      } while (current !== this.head);
+
+      return stations;
+    }
+
+    // Update the UI with the current stations
+    updateStationList() {
+      const stationList = document.getElementById('stationList');
+      stationList.innerHTML = '';
+
+      const stations = this.getStations();
+      stations.forEach(station => {
+        const li = document.createElement('li');
+        li.textContent = station.name;
+        stationList.appendChild(li);
+      });
+    }
+  }
+
+  const trainRoute = new TrainRoute();
+
+  // Add a new station to the route
+  function addStation() {
+    const stationName = document.getElementById('stationName').value;
+    if (!stationName) {
+      alert('Please enter a valid station name.');
+      return;
+    }
+    trainRoute.addStation(stationName);
+    document.getElementById('stationName').value = '';  // Clear input field
+    trainRoute.updateStationList();  // Update the list in the UI
+  }
+
+  // Remove a station from the route
+  function removeStation() {
+    const stationName = document.getElementById('stationName').value;
+    if (!stationName) {
+      alert('Please enter a valid station name to remove.');
+      return;
+    }
+    trainRoute.removeStation(stationName);
+    document.getElementById('stationName').value = '';  // Clear input field
+    trainRoute.updateStationList();  // Update the list in the UI
+  }
+
+  // Move the train to the next station
+  function moveTrain() {
+    trainRoute.moveTrain();
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Network Friend Recommendation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form, .recommendation {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .user-list, .recommendations {
+            margin-top: 30px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Social Network Friend Recommendation</h1>
+
+        <!-- Form for adding users and their connections -->
+        <div class="form">
+            <h2>Add a New User</h2>
+            <label for="userName">User Name:</label>
+            <input type="text" id="userName" placeholder="Enter user name">
+            <label for="userFriends">Friends (comma-separated):</label>
+            <input type="text" id="userFriends" placeholder="Enter friends' names">
+            <button onclick="addUser()">Add User</button>
+        </div>
+
+        <!-- Section for friend recommendations -->
+        <div class="recommendation">
+            <h2>Friend Recommendations</h2>
+            <label for="userToRecommend">Select User:</label>
+            <select id="userToRecommend">
+                <option value="">-- Select a User --</option>
+            </select>
+            <button onclick="getFriendRecommendations()">Get Recommendations</button>
+        </div>
+
+        <!-- Section for displaying users -->
+        <div class="user-list">
+            <h2>Users and Their Friends</h2>
+            <ul id="userList"></ul>
+        </div>
+
+        <!-- Section for displaying friend recommendations -->
+        <div class="recommendations">
+            <h2>Suggested Friends</h2>
+            <ul id="recommendedFriends"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Graph to represent the social network
+        class Graph {
+            constructor() {
+                this.users = {};
+            }
+
+            addUser(userName) {
+                if (!this.users[userName]) {
+                    this.users[userName] = new Set();  // Each user is connected to a set of friends
+                }
+            }
+
+            addFriendship(user1, user2) {
+                this.addUser(user1);
+                this.addUser(user2);
+                this.users[user1].add(user2);
+                this.users[user2].add(user1);
+            }
+
+            bfs(user) {
+                let visited = new Set();
+                let queue = [user];
+                let recommendations = new Set();
+
+                visited.add(user);
+
+                while (queue.length > 0) {
+                    let currentUser = queue.shift();
+
+                    for (let friend of this.users[currentUser]) {
+                        if (!visited.has(friend)) {
+                            visited.add(friend);
+                            queue.push(friend);
+                        }
+                        // Suggest friends based on mutual connections
+                        if (currentUser !== user && !this.users[user].has(friend)) {
+                            recommendations.add(friend);
+                        }
+                    }
+                }
+                return Array.from(recommendations);
+            }
+        }
+
+        // Instantiate Graph for the social network
+        const socialGraph = new Graph();
+
+        // Add user to the social network
+        function addUser() {
+            const userName = document.getElementById('userName').value.trim();
+            const userFriends = document.getElementById('userFriends').value.trim();
+
+            if (userName && userFriends) {
+                const friends = userFriends.split(',').map(friend => friend.trim());
+                for (let friend of friends) {
+                    socialGraph.addFriendship(userName, friend);
+                }
+                displayUsers();
+                alert(`User "${userName}" with friends ${friends.join(", ")} added.`);
+            } else {
+                alert("Please enter both user name and friends.");
+            }
+        }
+
+        // Display users and their friends
+        function displayUsers() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = "";
+            const userToRecommend = document.getElementById('userToRecommend');
+            userToRecommend.innerHTML = '<option value="">-- Select a User --</option>';
+
+            for (let user in socialGraph.users) {
+                const li = document.createElement('li');
+                li.textContent = `${user} -> Friends: ${Array.from(socialGraph.users[user]).join(", ")}`;
+                userList.appendChild(li);
+
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                userToRecommend.appendChild(option);
+            }
+        }
+
+        // Get friend recommendations using BFS
+        function getFriendRecommendations() {
+            const user = document.getElementById('userToRecommend').value;
+            if (user) {
+                const recommendations = socialGraph.bfs(user);
+                displayRecommendations(recommendations);
+            } else {
+                alert("Please select a user.");
+            }
+        }
+
+        // Display friend recommendations
+        function displayRecommendations(recommendations) {
+            const recommendedFriends = document.getElementById('recommendedFriends');
+            recommendedFriends.innerHTML = "";
+
+            if (recommendations.length === 0) {
+                recommendedFriends.innerHTML = "<li>No recommendations available.</li>";
+            } else {
+                recommendations.forEach(friend => {
+                    const li = document.createElement('li');
+                    li.textContent = friend;
+                    recommendedFriends.appendChild(li);
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>

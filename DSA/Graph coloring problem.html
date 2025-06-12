@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Coloring Problem (Greedy Algorithm)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #graph {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .node {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            margin: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .connections {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .edge {
+            width: 2px;
+            height: 2px;
+            background-color: black;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Graph Coloring Problem (Greedy Algorithm)</h1>
+
+    <div id="graph">
+        <!-- Graph nodes will be dynamically inserted here -->
+    </div>
+
+    <div id="actions">
+        <button class="button" onclick="solveGraphColoring()">Solve Graph Coloring</button>
+    </div>
+
+    <div id="connections" class="connections">
+        <!-- Graph edges will be dynamically drawn here -->
+    </div>
+
+    <script>
+        // Graph representation: adjacency list
+        const graph = {
+            0: [1, 3],
+            1: [0, 2],
+            2: [1, 3],
+            3: [0, 2],
+            4: [5],
+            5: [4]
+        };
+
+        // Colors for the nodes
+        const colors = ['#FF6347', '#4682B4', '#32CD32', '#FFD700', '#8A2BE2'];
+
+        // Store node colors
+        const nodeColors = Array(Object.keys(graph).length).fill(null);
+
+        // Display graph nodes
+        function displayGraph() {
+            const graphContainer = document.getElementById('graph');
+            graphContainer.innerHTML = '';
+
+            // Create nodes
+            Object.keys(graph).forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.classList.add('node');
+                nodeElement.id = 'node-' + node;
+                nodeElement.style.backgroundColor = 'lightgray';
+                nodeElement.textContent = node;
+
+                // Append to the container
+                graphContainer.appendChild(nodeElement);
+            });
+        }
+
+        // Display edges as lines between nodes
+        function displayEdges() {
+            const edgesContainer = document.getElementById('connections');
+            edgesContainer.innerHTML = '';
+
+            // Create edges
+            Object.keys(graph).forEach(node => {
+                graph[node].forEach(neighbor => {
+                    if (node < neighbor) {
+                        const edge = document.createElement('div');
+                        edge.classList.add('edge');
+                        edge.style.width = '60px';
+                        edge.style.height = '2px';
+                        edge.style.backgroundColor = 'black';
+                        edge.style.position = 'absolute';
+
+                        // Get the positions of the nodes
+                        const node1 = document.getElementById('node-' + node);
+                        const node2 = document.getElementById('node-' + neighbor);
+
+                        // Calculate the positions to draw the edge
+                        const x1 = node1.offsetLeft + node1.offsetWidth / 2;
+                        const y1 = node1.offsetTop + node1.offsetHeight / 2;
+                        const x2 = node2.offsetLeft + node2.offsetWidth / 2;
+                        const y2 = node2.offsetTop + node2.offsetHeight / 2;
+
+                        // Draw the line between the nodes
+                        const angle = Math.atan2(y2 - y1, x2 - x1);
+                        const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+                        edge.style.transform = `rotate(${angle}rad)`;
+                        edge.style.width = length + 'px';
+                        edge.style.left = x1 - (length / 2) + 'px';
+                        edge.style.top = y1 - 1 + 'px';
+
+                        edgesContainer.appendChild(edge);
+                    }
+                });
+            });
+        }
+
+        // Greedy algorithm to color the graph
+        function solveGraphColoring() {
+            const result = greedyColoring(graph);
+
+            // Color the nodes based on the result
+            Object.keys(result).forEach(node => {
+                const nodeElement = document.getElementById('node-' + node);
+                nodeElement.style.backgroundColor = colors[result[node]];
+                nodeColors[node] = result[node];
+            });
+
+            alert('Graph Coloring Complete!');
+        }
+
+        // Greedy coloring algorithm
+        function greedyColoring(graph) {
+            const result = {};
+            const availableColors = Array(colors.length).fill(true);
+
+            // Assign colors to each node
+            Object.keys(graph).forEach(node => {
+                // Mark unavailable colors for this node
+                graph[node].forEach(neighbor => {
+                    if (result[neighbor] !== undefined) {
+                        availableColors[result[neighbor]] = false;
+                    }
+                });
+
+                // Find the first available color
+                let color;
+                for (let i = 0; i < availableColors.length; i++) {
+                    if (availableColors[i]) {
+                        color = i;
+                        break;
+                    }
+                }
+
+                // Assign color and reset available colors for the next node
+                result[node] = color;
+                availableColors.fill(true);
+            });
+
+            return result;
+        }
+
+        // Initial setup to display graph
+        displayGraph();
+        displayEdges();
+    </script>
+
+</body>
+</html>

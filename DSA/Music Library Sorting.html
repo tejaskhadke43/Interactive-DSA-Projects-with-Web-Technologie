@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Library Sorter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+        }
+        select, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Music Library Sorter</h1>
+        <label for="sortCriteria">Sort By:</label>
+        <select id="sortCriteria">
+            <option value="duration">Duration</option>
+            <option value="artist">Artist</option>
+            <option value="genre">Genre</option>
+        </select>
+        <button onclick="sortLibrary()">Sort</button>
+        <table id="musicLibrary">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Genre</th>
+                    <th>Duration (mins)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Song A</td><td>Artist Z</td><td>Pop</td><td>3.5</td></tr>
+                <tr><td>Song B</td><td>Artist X</td><td>Rock</td><td>5.2</td></tr>
+                <tr><td>Song C</td><td>Artist Y</td><td>Jazz</td><td>4.1</td></tr>
+                <tr><td>Song D</td><td>Artist A</td><td>Classical</td><td>7.0</td></tr>
+                <tr><td>Song E</td><td>Artist M</td><td>Pop</td><td>2.8</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function quickSort(arr, key) {
+            if (arr.length <= 1) return arr;
+
+            const pivot = arr[arr.length - 1];
+            const left = [];
+            const right = [];
+
+            for (let i = 0; i < arr.length - 1; i++) {
+                if (arr[i][key] < pivot[key]) {
+                    left.push(arr[i]);
+                } else {
+                    right.push(arr[i]);
+                }
+            }
+
+            return [...quickSort(left, key), pivot, ...quickSort(right, key)];
+        }
+
+        function sortLibrary() {
+            const sortCriteria = document.getElementById("sortCriteria").value;
+
+            // Extract table data
+            const table = document.getElementById("musicLibrary");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const library = rows.map(row => {
+                const cells = row.querySelectorAll("td");
+                return {
+                    title: cells[0].innerText,
+                    artist: cells[1].innerText,
+                    genre: cells[2].innerText,
+                    duration: parseFloat(cells[3].innerText)
+                };
+            });
+
+            // Sort the library
+            const sortedLibrary = quickSort(library, sortCriteria);
+
+            // Update the table
+            const tbody = table.querySelector("tbody");
+            tbody.innerHTML = ""; // Clear existing rows
+            sortedLibrary.forEach(song => {
+                const row = `<tr>
+                    <td>${song.title}</td>
+                    <td>${song.artist}</td>
+                    <td>${song.genre}</td>
+                    <td>${song.duration.toFixed(1)}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>

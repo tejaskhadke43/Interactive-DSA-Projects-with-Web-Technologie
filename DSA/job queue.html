@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Queue System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .container input, .container button {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .container input[type="text"] {
+            width: 250px;
+        }
+        .container select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .job-list {
+            margin-top: 20px;
+        }
+        .job-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+        }
+        .normal {
+            background-color: #2196F3;
+        }
+        .high-priority {
+            background-color: #FF5722;
+        }
+        .emergency {
+            background-color: #D32F2F;
+        }
+        .job-status {
+            font-weight: bold;
+        }
+        .job-status.processing {
+            color: yellow;
+        }
+        .job-status.completed {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Job Queue System</h1>
+
+    <div class="container">
+        <input type="text" id="jobName" placeholder="Enter Job Name" />
+        <select id="prioritySelect">
+            <option value="1">Normal</option>
+            <option value="2">High Priority</option>
+            <option value="3">Emergency</option>
+        </select>
+        <button onclick="addJob()">Add Job</button>
+    </div>
+
+    <div class="job-list" id="jobList"></div>
+
+    <script>
+        class Job {
+            constructor(jobName, priority) {
+                this.jobName = jobName;
+                this.priority = priority;
+                this.status = 'Pending';
+            }
+
+            getPriorityClass() {
+                if (this.priority === 3) return 'emergency';
+                if (this.priority === 2) return 'high-priority';
+                return 'normal';
+            }
+        }
+
+        // Job queue
+        let jobQueue = [];
+
+        // Display the job list
+        function displayJobs() {
+            const jobListContainer = document.getElementById('jobList');
+            jobListContainer.innerHTML = '';  // Clear existing jobs
+
+            jobQueue.sort((a, b) => b.priority - a.priority);  // Sort jobs by priority
+
+            jobQueue.forEach((job, index) => {
+                const jobDiv = document.createElement('div');
+                jobDiv.className = `job-item ${job.getPriorityClass()}`;
+
+                jobDiv.innerHTML = `
+                    <span>${job.jobName}</span>
+                    <span class="job-status ${job.status === 'Pending' ? 'processing' : 'completed'}">${job.status}</span>
+                    <button onclick="processJob(${index})">Process</button>
+                `;
+
+                jobListContainer.appendChild(jobDiv);
+            });
+        }
+
+        // Add job to queue
+        function addJob() {
+            const jobName = document.getElementById('jobName').value;
+            const priority = parseInt(document.getElementById('prioritySelect').value);
+
+            if (jobName.trim() === '') {
+                alert('Please enter a job name.');
+                return;
+            }
+
+            const newJob = new Job(jobName, priority);
+            jobQueue.push(newJob);
+            document.getElementById('jobName').value = '';  // Clear input field
+            displayJobs();
+        }
+
+        // Process a job
+        function processJob(index) {
+            const job = jobQueue[index];
+            job.status = 'Completed';
+            setTimeout(() => {
+                // Remove job from queue after processing
+                jobQueue.splice(index, 1);
+                displayJobs();
+            }, 1000);
+
+            displayJobs();
+        }
+
+        // Initial empty job list
+        displayJobs();
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortest Path in a City (Dijkstra's Algorithm)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form, .result {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .result li {
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Shortest Path in a City (Dijkstra's Algorithm)</h1>
+
+        <!-- Form for entering the city map and intersections -->
+        <div class="form">
+            <h2>Define City Roads</h2>
+            <label for="intersection1">Intersection 1:</label>
+            <input type="text" id="intersection1" placeholder="Enter Intersection 1 Name">
+            <label for="intersection2">Intersection 2:</label>
+            <input type="text" id="intersection2" placeholder="Enter Intersection 2 Name">
+            <label for="roadDistance">Road Distance:</label>
+            <input type="number" id="roadDistance" placeholder="Enter distance">
+            <button onclick="addRoad()">Add Road</button>
+        </div>
+
+        <!-- Form for finding the shortest path -->
+        <div class="form">
+            <h2>Find Shortest Path</h2>
+            <label for="startIntersection">Start Intersection:</label>
+            <input type="text" id="startIntersection" placeholder="Enter starting intersection">
+            <label for="endIntersection">End Intersection:</label>
+            <input type="text" id="endIntersection" placeholder="Enter ending intersection">
+            <button onclick="findShortestPath()">Find Shortest Path</button>
+        </div>
+
+        <!-- Display result -->
+        <div class="result">
+            <h2>Shortest Path Result</h2>
+            <ul id="resultList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Dijkstra's Algorithm to find the shortest path
+        class Graph {
+            constructor() {
+                this.edges = {}; // adjacency list
+            }
+
+            addRoad(intersection1, intersection2, distance) {
+                if (!this.edges[intersection1]) {
+                    this.edges[intersection1] = [];
+                }
+                if (!this.edges[intersection2]) {
+                    this.edges[intersection2] = [];
+                }
+
+                this.edges[intersection1].push({ node: intersection2, distance });
+                this.edges[intersection2].push({ node: intersection1, distance });
+            }
+
+            dijkstra(start, end) {
+                let distances = {};
+                let previous = {};
+                let nodes = new PriorityQueue();
+
+                // Initialize distances to infinity, except for start node
+                for (let intersection in this.edges) {
+                    distances[intersection] = Infinity;
+                    previous[intersection] = null;
+                    nodes.enqueue(intersection, Infinity);
+                }
+                distances[start] = 0;
+                nodes.enqueue(start, 0);
+
+                while (!nodes.isEmpty()) {
+                    let currentNode = nodes.dequeue().value;
+
+                    if (currentNode === end) {
+                        // Reached the destination, reconstruct the path
+                        let path = [];
+                        let temp = end;
+                        while (previous[temp]) {
+                            path.unshift(temp);
+                            temp = previous[temp];
+                        }
+                        path.unshift(start);
+                        return { path, distance: distances[end] };
+                    }
+
+                    // Explore the neighbors
+                    for (let neighbor of this.edges[currentNode]) {
+                        let alt = distances[currentNode] + neighbor.distance;
+                        if (alt < distances[neighbor.node]) {
+                            distances[neighbor.node] = alt;
+                            previous[neighbor.node] = currentNode;
+                            nodes.enqueue(neighbor.node, alt);
+                        }
+                    }
+                }
+
+                return { path: [], distance: Infinity }; // No path found
+            }
+        }
+
+        // Priority Queue for Dijkstra's algorithm
+        class PriorityQueue {
+            constructor() {
+                this.values = [];
+            }
+
+            enqueue(value, priority) {
+                this.values.push({ value, priority });
+                this.sort();
+            }
+
+            dequeue() {
+                return this.values.shift();
+            }
+
+            sort() {
+                this.values.sort((a, b) => a.priority - b.priority);
+            }
+
+            isEmpty() {
+                return this.values.length === 0;
+            }
+        }
+
+        // Initialize the graph
+        const cityGraph = new Graph();
+
+        // Add roads between intersections
+        function addRoad() {
+            const intersection1 = document.getElementById("intersection1").value.trim();
+            const intersection2 = document.getElementById("intersection2").value.trim();
+            const roadDistance = parseInt(document.getElementById("roadDistance").value.trim());
+
+            if (intersection1 && intersection2 && !isNaN(roadDistance)) {
+                cityGraph.addRoad(intersection1, intersection2, roadDistance);
+                alert(`Road between ${intersection1} and ${intersection2} with distance ${roadDistance} added.`);
+            } else {
+                alert("Please provide valid input for both intersections and road distance.");
+            }
+        }
+
+        // Find the shortest path between two intersections
+        function findShortestPath() {
+            const startIntersection = document.getElementById("startIntersection").value.trim();
+            const endIntersection = document.getElementById("endIntersection").value.trim();
+
+            if (startIntersection && endIntersection) {
+                const result = cityGraph.dijkstra(startIntersection, endIntersection);
+                displayResult(result);
+            } else {
+                alert("Please provide both start and end intersections.");
+            }
+        }
+
+        // Display the result of the shortest path
+        function displayResult(result) {
+            const resultList = document.getElementById("resultList");
+            resultList.innerHTML = "";
+
+            if (result.path.length > 0) {
+                const li = document.createElement("li");
+                li.textContent = `Shortest Path: ${result.path.join(" -> ")} (Distance: ${result.distance})`;
+                resultList.appendChild(li);
+            } else {
+                const li = document.createElement("li");
+                li.textContent = "No path found.";
+                resultList.appendChild(li);
+            }
+        }
+    </script>
+
+</body>
+</html>

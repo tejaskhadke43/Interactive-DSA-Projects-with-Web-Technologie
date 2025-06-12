@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Multiplication: Strassen's Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .matrix-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Matrix Multiplication</h1>
+    <button onclick="generateMatrices()">Generate Random Matrices</button>
+    <button onclick="multiplyStandard()">Multiply (Standard)</button>
+    <button onclick="multiplyStrassen()">Multiply (Strassen)</button>
+    <div class="matrix-container">
+        <div>
+            <h2>Matrix A</h2>
+            <table id="matrixA"></table>
+        </div>
+        <div>
+            <h2>Matrix B</h2>
+            <table id="matrixB"></table>
+        </div>
+    </div>
+    <div class="output">
+        <h2>Result Matrix</h2>
+        <table id="resultMatrix"></table>
+        <h3>Time Taken: <span id="timeTaken">0</span> ms</h3>
+    </div>
+    <script>
+        let matrixA = [];
+        let matrixB = [];
+        let size = 4; // Default size of matrices (can be adjusted)
+
+        // Generate random matrices
+        function generateMatrices() {
+            matrixA = generateRandomMatrix(size, size);
+            matrixB = generateRandomMatrix(size, size);
+            displayMatrix(matrixA, "matrixA");
+            displayMatrix(matrixB, "matrixB");
+            document.getElementById("resultMatrix").innerHTML = "";
+            document.getElementById("timeTaken").textContent = "0";
+        }
+
+        // Generate a random matrix
+        function generateRandomMatrix(rows, cols) {
+            return Array.from({ length: rows }, () =>
+                Array.from({ length: cols }, () => Math.floor(Math.random() * 10))
+            );
+        }
+
+        // Display a matrix in a table
+        function displayMatrix(matrix, tableId) {
+            const table = document.getElementById(tableId);
+            table.innerHTML = matrix
+                .map(row => `<tr>${row.map(value => `<td>${value}</td>`).join("")}</tr>`)
+                .join("");
+        }
+
+        // Standard matrix multiplication
+        function multiplyStandard() {
+            const start = performance.now();
+            const result = standardMatrixMultiplication(matrixA, matrixB);
+            const end = performance.now();
+            displayMatrix(result, "resultMatrix");
+            document.getElementById("timeTaken").textContent = (end - start).toFixed(2);
+        }
+
+        function standardMatrixMultiplication(A, B) {
+            const n = A.length;
+            const result = Array.from({ length: n }, () => Array(n).fill(0));
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    for (let k = 0; k < n; k++) {
+                        result[i][j] += A[i][k] * B[k][j];
+                    }
+                }
+            }
+            return result;
+        }
+
+        // Strassen's matrix multiplication
+        function multiplyStrassen() {
+            const start = performance.now();
+            const result = strassenMatrixMultiplication(matrixA, matrixB);
+            const end = performance.now();
+            displayMatrix(result, "resultMatrix");
+            document.getElementById("timeTaken").textContent = (end - start).toFixed(2);
+        }
+
+        function strassenMatrixMultiplication(A, B) {
+            const n = A.length;
+            if (n === 1) {
+                return [[A[0][0] * B[0][0]]];
+            }
+
+            const half = n / 2;
+            const { a, b, c, d } = splitMatrix(A);
+            const { e, f, g, h } = splitMatrix(B);
+
+            const p1 = strassenMatrixMultiplication(a, subtractMatrices(f, h));
+            const p2 = strassenMatrixMultiplication(addMatrices(a, b), h);
+            const p3 = strassenMatrixMultiplication(addMatrices(c, d), e);
+            const p4 = strassenMatrixMultiplication(d, subtractMatrices(g, e));
+            const p5 = strassenMatrixMultiplication(addMatrices(a, d), addMatrices(e, h));
+            const p6 = strassenMatrixMultiplication(subtractMatrices(b, d), addMatrices(g, h));
+            const p7 = strassenMatrixMultiplication(subtractMatrices(a, c), addMatrices(e, f));
+
+            const topLeft = addMatrices(subtractMatrices(addMatrices(p5, p4), p2), p6);
+            const topRight = addMatrices(p1, p2);
+            const bottomLeft = addMatrices(p3, p4);
+            const bottomRight = subtractMatrices(subtractMatrices(addMatrices(p1, p5), p3), p7);
+
+            return combineMatrices(topLeft, topRight, bottomLeft, bottomRight);
+        }
+
+        // Utility functions for Strassen's algorithm
+        function splitMatrix(matrix) {
+            const n = matrix.length;
+            const half = n / 2;
+            const a = matrix.slice(0, half).map(row => row.slice(0, half));
+            const b = matrix.slice(0, half).map(row => row.slice(half));
+            const c = matrix.slice(half).map(row => row.slice(0, half));
+            const d = matrix.slice(half).map(row => row.slice(half));
+            return { a, b, c, d };
+        }
+
+        function addMatrices(A, B) {
+            return A.map((row, i) => row.map((val, j) => val + B[i][j]));
+        }
+
+        function subtractMatrices(A, B) {
+            return A.map((row, i) => row.map((val, j) => val - B[i][j]));
+        }
+
+        function combineMatrices(a, b, c, d) {
+            const top = a.map((row, i) => row.concat(b[i]));
+            const bottom = c.map((row, i) => row.concat(d[i]));
+            return top.concat(bottom);
+        }
+    </script>
+</body>
+</html>

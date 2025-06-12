@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Inventory Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Inventory Management System</h1>
+
+<form id="productForm">
+    <input type="number" id="productId" placeholder="Product ID" required>
+    <input type="text" id="productName" placeholder="Product Name" required>
+    <input type="number" id="productQuantity" placeholder="Quantity" required>
+    <input type="number" id="productPrice" placeholder="Price (in Rupees)" required>
+    <button type="submit">Add Product</button>
+</form>
+
+<h3>Total Inventory Value: <span id="totalValue">0</span> Rupees</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Price (Rupees)</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="inventoryTableBody"></tbody>
+</table>
+
+<form id="updateForm">
+    <h3>Update Product</h3>
+    <input type="number" id="updateId" placeholder="Product ID to Update" required>
+    <input type="number" id="updateQuantity" placeholder="New Quantity">
+    <input type="number" id="updatePrice" placeholder="New Price">
+    <button type="submit">Update Product</button>
+</form>
+
+<script>
+    let inventory = [];
+    
+    // Function to update the total value of the inventory
+    function updateTotalValue() {
+        const totalValue = inventory.reduce((total, product) => total + (product.quantity * product.price), 0);
+        document.getElementById('totalValue').textContent = totalValue;
+    }
+
+    // Function to add a new product
+    document.getElementById('productForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const id = parseInt(document.getElementById('productId').value);
+        const name = document.getElementById('productName').value;
+        const quantity = parseInt(document.getElementById('productQuantity').value);
+        const price = parseFloat(document.getElementById('productPrice').value);
+        
+        // Check if product already exists
+        const existingProduct = inventory.find(product => product.id === id);
+        if (existingProduct) {
+            alert('Product ID already exists. Please use a different ID.');
+            return;
+        }
+
+        // Add new product
+        inventory.push({ id, name, quantity, price });
+        renderInventory();
+        updateTotalValue();
+
+        // Clear the form fields
+        this.reset();
+    });
+
+    // Function to render the inventory table
+    function renderInventory() {
+        const tbody = document.getElementById('inventoryTableBody');
+        tbody.innerHTML = '';
+        inventory.forEach(product => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${product.id}</td>
+                <td>${product.name}</td>
+                <td>${product.quantity}</td>
+                <td>${product.price}</td>
+                <td><button onclick="deleteProduct(${product.id})">Delete</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // Function to delete a product
+    function deleteProduct(id) {
+        inventory = inventory.filter(product => product.id !== id);
+        renderInventory();
+        updateTotalValue();
+    }
+
+    // Function to update a product
+    document.getElementById('updateForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const id = parseInt(document.getElementById('updateId').value);
+        const newQuantity = parseInt(document.getElementById('updateQuantity').value);
+        const newPrice = parseFloat(document.getElementById('updatePrice').value);
+
+        const product = inventory.find(product => product.id === id);
+        if (product) {
+            if (!isNaN(newQuantity)) product.quantity = newQuantity;
+            if (!isNaN(newPrice)) product.price = newPrice;
+            renderInventory();
+            updateTotalValue();
+        } else {
+            alert('Product ID not found.');
+        }
+
+        // Clear the update form fields
+        this.reset();
+    });
+</script>
+
+</body>
+</html>
+

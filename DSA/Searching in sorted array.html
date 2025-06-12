@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotated Sorted Array Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rotated Sorted Array Search</h1>
+        <label for="arrayInput">Enter Rotated Sorted Array (comma-separated):</label>
+        <input type="text" id="arrayInput" placeholder="Example: 4,5,6,7,0,1,2">
+        <br>
+        <label for="targetInput">Enter Target Number:</label>
+        <input type="number" id="targetInput" placeholder="Example: 6">
+        <br>
+        <button onclick="searchInRotatedArray()">Search</button>
+        <div id="result" class="result"></div>
+    </div>
+    <script>
+        function searchInRotatedArray() {
+            const arrayInput = document.getElementById("arrayInput").value;
+            const targetInput = parseInt(document.getElementById("targetInput").value);
+            const resultDiv = document.getElementById("result");
+            
+            if (!arrayInput || isNaN(targetInput)) {
+                resultDiv.innerHTML = "<span class='error'>Please provide valid inputs!</span>";
+                return;
+            }
+
+            // Parse the input array
+            const nums = arrayInput.split(',').map(Number);
+
+            // Function to perform the modified binary search
+            function rotatedBinarySearch(nums, target) {
+                let left = 0, right = nums.length - 1;
+
+                while (left <= right) {
+                    const mid = Math.floor((left + right) / 2);
+
+                    if (nums[mid] === target) {
+                        return mid;
+                    }
+
+                    // Check if the left part is sorted
+                    if (nums[left] <= nums[mid]) {
+                        if (nums[left] <= target && target < nums[mid]) {
+                            right = mid - 1;
+                        } else {
+                            left = mid + 1;
+                        }
+                    }
+                    // Otherwise, the right part is sorted
+                    else {
+                        if (nums[mid] < target && target <= nums[right]) {
+                            left = mid + 1;
+                        } else {
+                            right = mid - 1;
+                        }
+                    }
+                }
+                return -1;
+            }
+
+            // Perform the search
+            const result = rotatedBinarySearch(nums, targetInput);
+
+            // Display the result
+            if (result !== -1) {
+                resultDiv.innerHTML = `Element found at index: ${result}`;
+            } else {
+                resultDiv.innerHTML = "<span class='error'>Element not found in the array.</span>";
+            }
+        }
+    </script>
+</body>
+</html>

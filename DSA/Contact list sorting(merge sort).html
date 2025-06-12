@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact List Sorting</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    .input-container input {
+      padding: 8px;
+      font-size: 16px;
+      width: 200px;
+      margin-right: 10px;
+    }
+    .input-container button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .output {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .performance {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    .performance span {
+      font-weight: bold;
+    }
+    .contacts {
+      margin-top: 20px;
+    }
+    .contacts ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .contacts li {
+      padding: 5px;
+      font-size: 14px;
+      background-color: #e3e3e3;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Contact List Sorting</h1>
+
+  <div class="container">
+    <div class="input-container">
+      <input type="text" id="contactInput" placeholder="Enter contact (name, phone)" />
+      <button onclick="addContact()">Add Contact</button>
+    </div>
+    <button onclick="sortContacts()">Sort Contacts</button>
+  </div>
+
+  <div class="output">
+    <p id="status"></p>
+  </div>
+
+  <div class="performance">
+    <p>Merge Sort Time: <span id="mergeTime">0</span> ms</p>
+    <p>Quick Sort Time: <span id="quickTime">0</span> ms</p>
+  </div>
+
+  <div class="contacts">
+    <h2>Contact List:</h2>
+    <ul id="contactList"></ul>
+  </div>
+
+  <script>
+    // Store contacts in an array
+    let contacts = [];
+
+    // Function to add a contact
+    function addContact() {
+      const contactInput = document.getElementById('contactInput').value.trim();
+      if (contactInput) {
+        contacts.push(contactInput);
+        document.getElementById('contactInput').value = ''; // Clear the input field
+        displayContacts();
+      } else {
+        alert('Please enter a valid contact.');
+      }
+    }
+
+    // Display contacts in the list
+    function displayContacts() {
+      const contactList = document.getElementById('contactList');
+      contactList.innerHTML = '';
+      contacts.forEach(contact => {
+        const li = document.createElement('li');
+        li.textContent = contact;
+        contactList.appendChild(li);
+      });
+    }
+
+    // Merge Sort Function
+    function mergeSort(arr) {
+      const start = performance.now();
+
+      if (arr.length <= 1) {
+        const end = performance.now();
+        return { sorted: arr, time: end - start };
+      }
+
+      const mid = Math.floor(arr.length / 2);
+      const left = mergeSort(arr.slice(0, mid));
+      const right = mergeSort(arr.slice(mid));
+
+      const merged = merge(left.sorted, right.sorted);
+      const end = performance.now();
+      return { sorted: merged, time: end - start };
+    }
+
+    // Merge two sorted arrays
+    function merge(left, right) {
+      let result = [];
+      let i = 0, j = 0;
+
+      while (i < left.length && j < right.length) {
+        if (left[i].toLowerCase() < right[j].toLowerCase()) {
+          result.push(left[i]);
+          i++;
+        } else {
+          result.push(right[j]);
+          j++;
+        }
+      }
+
+      return result.concat(left.slice(i)).concat(right.slice(j));
+    }
+
+    // Quick Sort Function
+    function quickSort(arr) {
+      const start = performance.now();
+
+      if (arr.length <= 1) {
+        const end = performance.now();
+        return { sorted: arr, time: end - start };
+      }
+
+      const pivot = arr[arr.length - 1];
+      let left = [], right = [];
+
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i].toLowerCase() < pivot.toLowerCase()) {
+          left.push(arr[i]);
+        } else {
+          right.push(arr[i]);
+        }
+      }
+
+      const sorted = [...quickSort(left).sorted, pivot, ...quickSort(right).sorted];
+      const end = performance.now();
+      return { sorted, time: end - start };
+    }
+
+    // Function to sort the contacts and compare performance
+    function sortContacts() {
+      if (contacts.length === 0) {
+        document.getElementById('status').textContent = 'No contacts to sort.';
+        return;
+      }
+
+      // Perform Merge Sort
+      const mergeResult = mergeSort([...contacts]);
+      document.getElementById('mergeTime').textContent = mergeResult.time.toFixed(2);
+
+      // Perform Quick Sort
+      const quickResult = quickSort([...contacts]);
+      document.getElementById('quickTime').textContent = quickResult.time.toFixed(2);
+
+      // Update contacts list
+      contacts = mergeResult.sorted;
+      displayContacts();
+
+      document.getElementById('status').textContent = 'Contacts sorted successfully!';
+    }
+  </script>
+
+</body>
+</html>

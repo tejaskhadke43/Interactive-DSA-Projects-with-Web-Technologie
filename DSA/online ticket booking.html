@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Ticketing System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .ticketing-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .ticketing-controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .ticketing-controls button:hover {
+            background-color: #45a049;
+        }
+        .ticketing-status {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .status-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .status-list li {
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Online Ticketing System</h1>
+
+        <!-- Ticketing Controls -->
+        <div class="ticketing-controls">
+            <button onclick="bookTicket('VIP')">Book VIP Ticket</button>
+            <button onclick="bookTicket('Regular')">Book Regular Ticket</button>
+            <button onclick="cancelTicket()">Cancel Ticket</button>
+            <button onclick="serveNext()">Serve Next</button>
+        </div>
+
+        <!-- Ticketing Status -->
+        <div class="ticketing-status">
+            <h2>Current Ticket Queue</h2>
+            <ul class="status-list" id="statusList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Priority Queue for managing customers
+        class PriorityQueue {
+            constructor() {
+                this.queue = [];
+            }
+
+            // Add an item to the queue
+            enqueue(customer) {
+                let inserted = false;
+                for (let i = 0; i < this.queue.length; i++) {
+                    // VIP customers (priority = 1) should go first
+                    if (customer.priority < this.queue[i].priority) {
+                        this.queue.splice(i, 0, customer);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) {
+                    this.queue.push(customer);
+                }
+            }
+
+            // Remove and return the first item from the queue
+            dequeue() {
+                return this.queue.shift();
+            }
+
+            // Peek at the first item in the queue
+            peek() {
+                return this.queue[0];
+            }
+
+            // Get the queue length
+            length() {
+                return this.queue.length;
+            }
+
+            // Check if the queue is empty
+            isEmpty() {
+                return this.queue.length === 0;
+            }
+
+            // Remove a specific customer by id (used for cancellation)
+            removeById(id) {
+                this.queue = this.queue.filter(customer => customer.id !== id);
+            }
+        }
+
+        // Create a priority queue instance
+        const ticketQueue = new PriorityQueue();
+        let ticketIdCounter = 1;  // Used to generate unique ticket IDs
+
+        // Book a ticket (VIP or Regular)
+        function bookTicket(type) {
+            const customer = {
+                id: ticketIdCounter++,  // Increment and assign a unique ID
+                type: type,
+                priority: type === 'VIP' ? 1 : 2,  // VIP has priority 1, regular has 2
+                timestamp: new Date().getTime()  // For FIFO ordering within same priority
+            };
+
+            // Add customer to the queue
+            ticketQueue.enqueue(customer);
+            updateStatus();
+        }
+
+        // Cancel a ticket (by customer ID)
+        function cancelTicket() {
+            const ticketId = prompt("Enter the ticket ID to cancel:");
+            if (ticketId) {
+                ticketQueue.removeById(Number(ticketId));
+                updateStatus();
+            }
+        }
+
+        // Serve the next customer based on priority
+        function serveNext() {
+            if (!ticketQueue.isEmpty()) {
+                const customer = ticketQueue.dequeue();
+                alert(`Serving ${customer.type} customer with ticket ID: ${customer.id}`);
+                updateStatus();
+            } else {
+                alert("No customers in the queue!");
+            }
+        }
+
+        // Update the status list displayed on the page
+        function updateStatus() {
+            const statusList = document.getElementById('statusList');
+            statusList.innerHTML = '';  // Clear the current list
+
+            if (ticketQueue.isEmpty()) {
+                statusList.innerHTML = '<li>No customers in the queue.</li>';
+            } else {
+                ticketQueue.queue.forEach(customer => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Ticket ID: ${customer.id} | ${customer.type} | Timestamp: ${new Date(customer.timestamp).toLocaleString()}`;
+                    statusList.appendChild(listItem);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

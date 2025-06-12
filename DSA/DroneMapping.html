@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Mapping System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            margin-right: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Drone Mapping System</h1>
+
+    <div class="form-container">
+        <h3>Enter Geographical Data</h3>
+        <div class="input-group">
+            <label for="region">Region:</label>
+            <input type="text" id="region" placeholder="Region Name" required />
+        </div>
+        <div class="input-group">
+            <label for="latitude">Latitude:</label>
+            <input type="number" step="0.000001" id="latitude" placeholder="Latitude" required />
+        </div>
+        <div class="input-group">
+            <label for="longitude">Longitude:</label>
+            <input type="number" step="0.000001" id="longitude" placeholder="Longitude" required />
+        </div>
+        <div class="input-group">
+            <label for="altitude">Altitude (meters):</label>
+            <input type="number" id="altitude" placeholder="Altitude" required />
+        </div>
+        <button id="addData">Add Data</button>
+        <button id="extractData">Extract Data</button>
+    </div>
+
+    <h3>Geographical Data</h3>
+    <table id="geoTable">
+        <thead>
+            <tr>
+                <th>Region</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Altitude (m)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be appended here -->
+        </tbody>
+    </table>
+
+    <div id="extractedData"></div>
+
+    <script>
+        let geoData = [];
+
+        function renderGeoData() {
+            const tableBody = document.querySelector('#geoTable tbody');
+            tableBody.innerHTML = '';
+            geoData.forEach(data => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.region}</td>
+                    <td>${data.latitude}</td>
+                    <td>${data.longitude}</td>
+                    <td>${data.altitude}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function addGeoData() {
+            const region = document.getElementById('region').value;
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            const altitude = parseFloat(document.getElementById('altitude').value);
+
+            geoData.push({ region, latitude, longitude, altitude });
+            renderGeoData();
+
+            // Clear inputs
+            document.getElementById('region').value = '';
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('altitude').value = '';
+        }
+
+        function extractGeoData() {
+            const regionName = document.getElementById('region').value;
+            const result = geoData.filter(data => data.region.toLowerCase() === regionName.toLowerCase());
+
+            if (result.length === 0) {
+                document.getElementById('extractedData').innerText = 'No data found for the specified region.';
+            } else {
+                document.getElementById('extractedData').innerHTML = `
+                    <h3>Extracted Data for ${regionName}</h3>
+                    <p>Latitude: ${result[0].latitude}</p>
+                    <p>Longitude: ${result[0].longitude}</p>
+                    <p>Altitude: ${result[0].altitude} m</p>
+                `;
+            }
+        }
+
+        document.getElementById('addData').addEventListener('click', addGeoData);
+        document.getElementById('extractData').addEventListener('click', extractGeoData);
+    </script>
+
+</body>
+</html>

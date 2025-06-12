@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search in Rotated Sorted Array</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    .input-container input {
+      padding: 8px;
+      font-size: 16px;
+      width: 250px;
+      margin-right: 10px;
+    }
+    .input-container button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .output {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .array-output {
+      margin-top: 20px;
+      font-size: 16px;
+      white-space: pre-wrap;
+      background-color: #e3e3e3;
+      padding: 10px;
+      border-radius: 5px;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Search in Rotated Sorted Array</h1>
+
+  <div class="container">
+    <div class="input-container">
+      <input type="text" id="arrayInput" placeholder="Enter rotated sorted array" />
+      <input type="number" id="targetInput" placeholder="Enter target" />
+      <button onclick="searchInRotatedArray()">Search</button>
+    </div>
+    <div class="output">
+      <p id="result"></p>
+    </div>
+    <div class="array-output">
+      <h3>Array Details:</h3>
+      <p id="arrayDetails"></p>
+    </div>
+  </div>
+
+  <script>
+    // Function to perform the binary search on a rotated sorted array
+    function searchInRotatedArray() {
+      const arrayInput = document.getElementById('arrayInput').value.trim();
+      const target = parseInt(document.getElementById('targetInput').value.trim(), 10);
+      
+      if (!arrayInput || isNaN(target)) {
+        document.getElementById('result').textContent = 'Please enter a valid array and target.';
+        return;
+      }
+
+      const arr = parseArray(arrayInput);
+
+      if (arr === null) {
+        document.getElementById('result').textContent = 'Invalid array format. Please enter a valid array.';
+        return;
+      }
+
+      const result = rotatedBinarySearch(arr, target);
+
+      document.getElementById('result').textContent = result === -1
+        ? `Target ${target} not found in the array.`
+        : `Target ${target} found at index ${result}.`;
+
+      document.getElementById('arrayDetails').textContent = `Array: [${arr.join(', ')}]`;
+    }
+
+    // Function to parse a string input into an array of numbers
+    function parseArray(input) {
+      try {
+        const arr = JSON.parse(input);
+        if (Array.isArray(arr) && arr.every(item => !isNaN(item))) {
+          return arr.map(item => parseInt(item, 10));
+        }
+      } catch (e) {
+        return null;
+      }
+      return null;
+    }
+
+    // Function to perform modified binary search on a rotated sorted array
+    function rotatedBinarySearch(arr, target) {
+      let left = 0, right = arr.length - 1;
+
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+
+        if (arr[mid] === target) {
+          return mid; // Found the target
+        }
+
+        // Determine which side is sorted
+        if (arr[left] <= arr[mid]) { // Left side is sorted
+          if (arr[left] <= target && target < arr[mid]) {
+            right = mid - 1; // Target is in the left part
+          } else {
+            left = mid + 1; // Target is in the right part
+          }
+        } else { // Right side is sorted
+          if (arr[mid] < target && target <= arr[right]) {
+            left = mid + 1; // Target is in the right part
+          } else {
+            right = mid - 1; // Target is in the left part
+          }
+        }
+      }
+
+      return -1; // Target not found
+    }
+  </script>
+
+</body>
+</html>

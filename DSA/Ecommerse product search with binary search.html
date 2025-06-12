@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-commerce Product Search</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .search-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      font-size: 16px;
+      width: 200px;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .performance {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .performance span {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Product Search</h1>
+  
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Enter product name" />
+    <button onclick="searchProduct()">Search</button>
+  </div>
+  
+  <div class="result" id="searchResult"></div>
+  
+  <div class="performance">
+    <p>Linear Search Time: <span id="linearTime">0</span> ms</p>
+    <p>Binary Search Time: <span id="binaryTime">0</span> ms</p>
+  </div>
+  
+  <script>
+    // Sorted Product Catalog
+    const products = [
+      'Apple', 'Banana', 'Carrot', 'Date', 'Grape', 'Kiwi', 'Lemon', 'Mango', 'Orange', 'Peach', 'Pineapple', 'Strawberry', 'Watermelon'
+    ];
+
+    // Linear Search Function
+    function linearSearch(arr, target) {
+      const start = performance.now();
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i].toLowerCase() === target.toLowerCase()) {
+          const end = performance.now();
+          return { found: true, time: end - start };
+        }
+      }
+      const end = performance.now();
+      return { found: false, time: end - start };
+    }
+
+    // Binary Search Function (assuming the array is already sorted)
+    function binarySearch(arr, target) {
+      const start = performance.now();
+      let low = 0;
+      let high = arr.length - 1;
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        if (arr[mid].toLowerCase() === target.toLowerCase()) {
+          const end = performance.now();
+          return { found: true, time: end - start };
+        } else if (arr[mid].toLowerCase() < target.toLowerCase()) {
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      const end = performance.now();
+      return { found: false, time: end - start };
+    }
+
+    // Search Function that uses both Linear and Binary Search
+    function searchProduct() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+
+      if (searchTerm === '') {
+        document.getElementById('searchResult').textContent = 'Please enter a product name.';
+        return;
+      }
+
+      // Perform Linear Search
+      const linearResult = linearSearch(products, searchTerm);
+      document.getElementById('linearTime').textContent = linearResult.time.toFixed(2);
+
+      // Perform Binary Search
+      const binaryResult = binarySearch(products, searchTerm);
+      document.getElementById('binaryTime').textContent = binaryResult.time.toFixed(2);
+
+      // Display Results
+      if (linearResult.found || binaryResult.found) {
+        document.getElementById('searchResult').textContent = `Product "${searchTerm}" found!`;
+      } else {
+        document.getElementById('searchResult').textContent = `Product "${searchTerm}" not found.`;
+      }
+    }
+  </script>
+
+</body>
+</html>

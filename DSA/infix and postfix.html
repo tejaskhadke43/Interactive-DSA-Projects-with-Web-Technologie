@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infix to Postfix Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(45deg, #ffb6c1, #ff8c00);
+        }
+
+        .calculator {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            box-sizing: border-box;
+        }
+
+        .display {
+            width: 100%;
+            height: 50px;
+            font-size: 24px;
+            text-align: right;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 2px solid #dcdcdc;
+            border-radius: 10px;
+            background-color: #f4f4f9;
+            color: #333;
+            box-sizing: border-box;
+        }
+
+        .postfix-display {
+            width: 100%;
+            font-size: 18px;
+            text-align: left;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #e0f7fa;
+            border: 2px solid #b2ebf2;
+            border-radius: 10px;
+            color: #333;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .buttons button {
+            font-size: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .buttons button:hover {
+            transform: scale(1.05);
+        }
+
+        .buttons button:active {
+            transform: scale(1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Colorful buttons */
+        .button-equal {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .button-clear {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .button-operator {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .button-number {
+            background-color: #ff8c00;
+            color: white;
+        }
+
+        .button-special {
+            background-color: #9c27b0;
+            color: white;
+        }
+
+        .button-number, .button-special {
+            background-color: #00bcd4;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" class="display" id="input" disabled>
+        <div class="postfix-display" id="postfix-display">Postfix Expression: </div> <!-- New postfix display -->
+        <div class="buttons">
+            <!-- Number Buttons -->
+            <button class="button-number" onclick="appendValue('7')">7</button>
+            <button class="button-number" onclick="appendValue('8')">8</button>
+            <button class="button-number" onclick="appendValue('9')">9</button>
+            <button class="button-operator" onclick="appendValue('/')">/</button>
+
+            <button class="button-number" onclick="appendValue('4')">4</button>
+            <button class="button-number" onclick="appendValue('5')">5</button>
+            <button class="button-number" onclick="appendValue('6')">6</button>
+            <button class="button-operator" onclick="appendValue('*')">*</button>
+
+            <button class="button-number" onclick="appendValue('1')">1</button>
+            <button class="button-number" onclick="appendValue('2')">2</button>
+            <button class="button-number" onclick="appendValue('3')">3</button>
+            <button class="button-operator" onclick="appendValue('-')">-</button>
+
+            <button class="button-number" onclick="appendValue('0')">0</button>
+            <button class="button-special" onclick="appendValue('.')">.</button>
+            <button class="button-equal" onclick="calculateResult()">=</button>
+            <button class="button-operator" onclick="appendValue('+')">+</button>
+
+            <button class="button-clear" onclick="clearInput()">C</button>
+            <button class="button-special" onclick="appendValue('(')">(</button>
+            <button class="button-special" onclick="appendValue(')')">)</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to append values to the input display
+        function appendValue(value) {
+            document.getElementById('input').value += value;
+        }
+
+        // Function to clear the input display
+        function clearInput() {
+            document.getElementById('input').value = '';
+            document.getElementById('postfix-display').textContent = 'Postfix Expression: ';
+        }
+
+        // Function to calculate the result and show the postfix expression
+        function calculateResult() {
+            const inputExpression = document.getElementById('input').value;
+            const postfixExpression = infixToPostfix(inputExpression);
+            const result = evaluatePostfix(postfixExpression);
+            
+            // Display the result and postfix expression
+            document.getElementById('input').value = result;
+            document.getElementById('postfix-display').textContent = 'Postfix Expression: ' + postfixExpression;
+        }
+
+        // Infix to Postfix conversion (Shunting Yard algorithm)
+        function infixToPostfix(expression) {
+            let stack = [];
+            let postfix = [];
+            let precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3};
+            let operators = '+-*/^';
+
+            for (let i = 0; i < expression.length; i++) {
+                let token = expression[i];
+
+                if (/\d/.test(token)) {
+                    // If the token is a number, add it to the output
+                    let number = token;
+                    while (i + 1 < expression.length && /\d/.test(expression[i + 1])) {
+                        i++;
+                        number += expression[i];
+                    }
+                    postfix.push(number);
+                } else if (token === '(') {
+                    stack.push(token);
+                } else if (token === ')') {
+                    // Pop until '('
+                    while (stack.length > 0 && stack[stack.length - 1] !== '(') {
+                        postfix.push(stack.pop());
+                    }
+                    stack.pop(); // Pop '('
+                } else if (operators.includes(token)) {
+                    // Operator
+                    while (stack.length > 0 && precedence[token] <= precedence[stack[stack.length - 1]]) {
+                        postfix.push(stack.pop());
+                    }
+                    stack.push(token);
+                }
+            }
+
+            // Pop all the remaining operators from the stack
+            while (stack.length > 0) {
+                postfix.push(stack.pop());
+            }
+
+            return postfix.join(' ');
+        }
+
+        // Evaluate Postfix expression
+        function evaluatePostfix(postfix) {
+            let stack = [];
+            let tokens = postfix.split(' ');
+
+            for (let token of tokens) {
+                if (!isNaN(token)) {
+                    stack.push(parseFloat(token));
+                } else {
+                    let b = stack.pop();
+                    let a = stack.pop();
+                    let result;
+
+                    switch (token) {
+                        case '+': result = a + b; break;
+                        case '-': result = a - b; break;
+                        case '*': result = a * b; break;
+                        case '/': result = a / b; break;
+                        case '^': result = Math.pow(a, b); break;
+                        default: result = 0; break;
+                    }
+
+                    stack.push(result);
+                }
+            }
+
+            return stack.pop();
+        }
+    </script>
+</body>
+</html>
+
+

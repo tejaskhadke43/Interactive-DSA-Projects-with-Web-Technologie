@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizational Hierarchy Management</title>
+    <style>
+        /* styles.css */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #org-hierarchy {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Style for each node (employee or manager) */
+        .node {
+            margin: 10px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+            text-align: center;
+            width: 120px;
+            height: 120px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Style for the children container */
+        .node > .children {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Style for child nodes */
+        .children .node {
+            width: 100px;
+            height: 100px;
+            background-color: #e0e0e0;
+            margin: 5px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Organizational Hierarchy Management</h1>
+    <div id="org-hierarchy">
+        <!-- Hierarchy will be rendered here -->
+    </div>
+
+    <div>
+        <h2>Actions</h2>
+        <button onclick="addEmployee('CEO', 'New Employee')">Add Employee</button>
+        <button onclick="promoteEmployee('New Employee')">Promote Employee</button>
+        <button onclick="removeEmployee('New Employee')">Remove Employee</button>
+    </div>
+
+    <script>
+        // JavaScript to handle the organizational hierarchy logic
+
+        // Initial root of the hierarchy (CEO)
+        const orgHierarchy = {
+            name: 'CEO',
+            children: [
+                { name: 'Manager 1', children: [] },
+                { name: 'Manager 2', children: [] }
+            ]
+        };
+
+        // Render the organizational hierarchy to the DOM
+        function renderHierarchy() {
+            const orgContainer = document.getElementById('org-hierarchy');
+            orgContainer.innerHTML = ''; // Clear the container before re-rendering
+            renderNode(orgHierarchy, orgContainer);
+        }
+
+        // Recursive function to render a node and its children
+        function renderNode(node, parentElement) {
+            // Create the main node element for this item
+            const nodeElement = document.createElement('div');
+            nodeElement.classList.add('node');
+            nodeElement.innerHTML = `<strong>${node.name}</strong>`;
+
+            // Create a container for the children nodes (if they exist)
+            if (node.children.length > 0) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.classList.add('children');
+                
+                // Render all child nodes
+                node.children.forEach(child => renderNode(child, childrenContainer));
+                
+                // Append the children container to the parent node element
+                nodeElement.appendChild(childrenContainer);
+            }
+
+            // Append the node element to the parent element
+            parentElement.appendChild(nodeElement);
+        }
+
+        // Function to add a new employee under a given manager
+        function addEmployee(managerName, employeeName) {
+            const managerNode = findEmployee(orgHierarchy, managerName);
+            if (managerNode) {
+                const newEmployee = { name: employeeName, children: [] };
+                managerNode.children.push(newEmployee);
+                renderHierarchy();
+            } else {
+                alert(`Manager ${managerName} not found.`);
+            }
+        }
+
+        // Function to promote an employee by moving them under the root (CEO)
+        function promoteEmployee(employeeName) {
+            const employeeNode = findEmployee(orgHierarchy, employeeName);
+            if (employeeNode) {
+                // Find the parent node of the employee and remove the employee from the parent's children
+                const parentNode = findParent(orgHierarchy, employeeName);
+                if (parentNode) {
+                    parentNode.children = parentNode.children.filter(child => child !== employeeNode);
+                }
+                // Move employee to the root (CEO)
+                orgHierarchy.children.push(employeeNode);
+                renderHierarchy();
+            } else {
+                alert(`Employee ${employeeName} not found.`);
+            }
+        }
+
+        // Function to remove an employee from the hierarchy
+        function removeEmployee(employeeName) {
+            const employeeNode = findEmployee(orgHierarchy, employeeName);
+            if (employeeNode) {
+                // Find the parent node and remove the employee
+                const parentNode = findParent(orgHierarchy, employeeName);
+                if (parentNode) {
+                    parentNode.children = parentNode.children.filter(child => child !== employeeNode);
+                }
+                renderHierarchy();
+            } else {
+                alert(`Employee ${employeeName} not found.`);
+            }
+        }
+
+        // Helper function to find an employee in the hierarchy
+        function findEmployee(node, name) {
+            if (node.name === name) {
+                return node;
+            }
+            for (let child of node.children) {
+                const result = findEmployee(child, name);
+                if (result) return result;
+            }
+            return null;
+        }
+
+        // Helper function to find the parent of a given employee node
+        function findParent(node, employeeName) {
+            if (!node || !node.children) return null;
+            for (let child of node.children) {
+                if (child.name === employeeName) {
+                    return node; // This node is the parent of the employee
+                }
+                const parent = findParent(child, employeeName);
+                if (parent) return parent;
+            }
+            return null;
+        }
+
+        // Initialize hierarchy with default employees (Manager 1 and Manager 2)
+        renderHierarchy();
+    </script>
+</body>
+</html>

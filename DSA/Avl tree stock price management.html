@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL Tree Stock Price Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #tree {
+            margin: 20px 0;
+            text-align: center;
+        }
+        #actions {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type="number"] {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>AVL Tree for Stock Price Management</h1>
+    
+    <div id="actions">
+        <input type="number" id="stock-price" placeholder="Enter Stock Price">
+        <button class="button" onclick="insertStock()">Insert Stock Price</button>
+    </div>
+
+    <div id="tree">
+        <h2>Stock Price Tree</h2>
+        <div id="tree-display"></div>
+    </div>
+
+    <script>
+        // AVL Tree Node
+        class TreeNode {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+                this.height = 1; // height of the node (used for balancing)
+            }
+        }
+
+        // AVL Tree class with insert, rotation and balance logic
+        class AVLTree {
+            constructor() {
+                this.root = null;
+            }
+
+            // Helper method to get the height of a node
+            getHeight(node) {
+                return node ? node.height : 0;
+            }
+
+            // Helper method to get the balance factor of a node
+            getBalance(node) {
+                return node ? this.getHeight(node.left) - this.getHeight(node.right) : 0;
+            }
+
+            // Right rotation
+            rightRotate(y) {
+                const x = y.left;
+                const T2 = x.right;
+
+                // Perform rotation
+                x.right = y;
+                y.left = T2;
+
+                // Update heights
+                y.height = Math.max(this.getHeight(y.left), this.getHeight(y.right)) + 1;
+                x.height = Math.max(this.getHeight(x.left), this.getHeight(x.right)) + 1;
+
+                // Return new root
+                return x;
+            }
+
+            // Left rotation
+            leftRotate(x) {
+                const y = x.right;
+                const T2 = y.left;
+
+                // Perform rotation
+                y.left = x;
+                x.right = T2;
+
+                // Update heights
+                x.height = Math.max(this.getHeight(x.left), this.getHeight(x.right)) + 1;
+                y.height = Math.max(this.getHeight(y.left), this.getHeight(y.right)) + 1;
+
+                // Return new root
+                return y;
+            }
+
+            // Insert a node
+            insert(node, value) {
+                // 1. Perform the normal BST insert
+                if (node === null) {
+                    return new TreeNode(value);
+                }
+
+                if (value < node.value) {
+                    node.left = this.insert(node.left, value);
+                } else if (value > node.value) {
+                    node.right = this.insert(node.right, value);
+                } else {
+                    return node; // Duplicate values are not allowed in the AVL tree
+                }
+
+                // 2. Update the height of the ancestor node
+                node.height = Math.max(this.getHeight(node.left), this.getHeight(node.right)) + 1;
+
+                // 3. Get the balance factor to check whether this node became unbalanced
+                const balance = this.getBalance(node);
+
+                // If the node becomes unbalanced, then there are 4 cases
+
+                // Left Left Case
+                if (balance > 1 && value < node.left.value) {
+                    return this.rightRotate(node);
+                }
+
+                // Right Right Case
+                if (balance < -1 && value > node.right.value) {
+                    return this.leftRotate(node);
+                }
+
+                // Left Right Case
+                if (balance > 1 && value > node.left.value) {
+                    node.left = this.leftRotate(node.left);
+                    return this.rightRotate(node);
+                }
+
+                // Right Left Case
+                if (balance < -1 && value < node.right.value) {
+                    node.right = this.rightRotate(node.right);
+                    return this.leftRotate(node);
+                }
+
+                // Return the (unchanged) node pointer
+                return node;
+            }
+
+            // Public insert method
+            insertValue(value) {
+                this.root = this.insert(this.root, value);
+            }
+
+            // In-order traversal to display the tree
+            inOrderTraversal(node, result = []) {
+                if (node !== null) {
+                    this.inOrderTraversal(node.left, result);
+                    result.push(node.value);
+                    this.inOrderTraversal(node.right, result);
+                }
+                return result;
+            }
+
+            // Get the tree in-order
+            getInOrder() {
+                return this.inOrderTraversal(this.root);
+            }
+        }
+
+        // Create a new AVL Tree instance
+        const avlTree = new AVLTree();
+
+        // Insert a stock price into the AVL Tree
+        function insertStock() {
+            const price = parseFloat(document.getElementById('stock-price').value);
+            if (!isNaN(price) && price > 0) {
+                avlTree.insertValue(price);
+                displayTree();
+                document.getElementById('stock-price').value = ''; // Clear input
+            } else {
+                alert('Please enter a valid stock price');
+            }
+        }
+
+        // Display the AVL tree in in-order format
+        function displayTree() {
+            const treeDisplay = document.getElementById('tree-display');
+            const inOrderValues = avlTree.getInOrder();
+            treeDisplay.innerHTML = `<strong>In-order Traversal (Stock Prices):</strong><br/>` + inOrderValues.join(' -> ');
+        }
+    </script>
+</body>
+</html>

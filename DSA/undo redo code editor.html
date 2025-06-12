@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor with Undo/Redo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .editor-container {
+            width: 60%;
+            margin: auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            color: #333;
+            resize: none;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .controls button:hover {
+            background-color: #45a049;
+        }
+        .controls button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="editor-container">
+        <h2>Code Editor</h2>
+        <textarea id="editor" placeholder="Start typing your code here..."></textarea>
+        <div class="controls">
+            <button id="undoBtn" onclick="undo()" disabled>Undo</button>
+            <button id="redoBtn" onclick="redo()" disabled>Redo</button>
+        </div>
+    </div>
+
+    <script>
+        // Stacks to manage undo/redo functionality
+        const undoStack = [];
+        const redoStack = [];
+
+        // Get the textarea element
+        const editor = document.getElementById('editor');
+        
+        // Store initial state
+        let lastText = editor.value;
+        undoStack.push(lastText);
+
+        // Update the undo stack whenever the text changes
+        editor.addEventListener('input', () => {
+            const currentText = editor.value;
+            // Only push to undo stack if there's a real change
+            if (currentText !== lastText) {
+                undoStack.push(lastText); // Add previous state to undo stack
+                lastText = currentText;   // Update the last text
+
+                // Clear redo stack as new action has been performed
+                redoStack.length = 0;
+                updateButtons();
+            }
+        });
+
+        // Undo function
+        function undo() {
+            if (undoStack.length > 1) {
+                const currentText = editor.value;
+                redoStack.push(currentText); // Push current state to redo stack
+
+                const previousText = undoStack.pop(); // Pop last state from undo stack
+                editor.value = previousText; // Restore previous state
+                lastText = previousText; // Update lastText to the previous value
+                updateButtons();
+            }
+        }
+
+        // Redo function
+        function redo() {
+            if (redoStack.length > 0) {
+                const currentText = editor.value;
+                undoStack.push(currentText); // Push current state to undo stack
+
+                const redoText = redoStack.pop(); // Pop last state from redo stack
+                editor.value = redoText; // Restore to redo state
+                lastText = redoText; // Update lastText to the redo state
+                updateButtons();
+            }
+        }
+
+        // Update the enable/disable state of undo/redo buttons
+        function updateButtons() {
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+
+            // Enable/disable undo button based on undoStack
+            undoBtn.disabled = undoStack.length <= 1; // No undo if there's only the initial state
+            // Enable/disable redo button based on redoStack
+            redoBtn.disabled = redoStack.length === 0; // No redo if the redo stack is empty
+        }
+
+        // Initial call to update buttons
+        updateButtons();
+    </script>
+
+</body>
+</html>

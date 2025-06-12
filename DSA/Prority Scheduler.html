@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Scheduler Simulation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f9;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .task-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-form input, .task-form button {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .task-list {
+      margin-top: 20px;
+    }
+
+    .task-list ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .task-list li {
+      background-color: #e0e0e0;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .task-list li span {
+      font-weight: bold;
+    }
+
+    .status {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Task Scheduler</h2>
+  <div class="task-form">
+    <input type="text" id="taskName" placeholder="Task Name" />
+    <input type="number" id="taskPriority" placeholder="Task Priority (Higher = Higher)" />
+    <input type="number" id="taskDuration" placeholder="Task Duration (seconds)" />
+    <button onclick="addTask()">Add Task</button>
+  </div>
+  
+  <div class="task-list">
+    <h3>Scheduled Tasks</h3>
+    <ul id="taskList"></ul>
+  </div>
+
+  <div class="status">
+    <button onclick="executeNextTask()">Execute Next Task</button>
+    <p id="statusMessage">No tasks executed yet.</p>
+  </div>
+</div>
+
+<script>
+  class Task {
+    constructor(name, priority, duration) {
+      this.name = name;
+      this.priority = priority;
+      this.duration = duration;
+      this.next = null;
+      this.prev = null;
+    }
+  }
+
+  class TaskScheduler {
+    constructor() {
+      this.head = null;
+      this.tail = null;
+    }
+
+    // Add task in correct priority order (higher priority first)
+    addTask(name, priority, duration) {
+      const newTask = new Task(name, priority, duration);
+
+      if (!this.head) {
+        this.head = newTask;
+        this.tail = newTask;
+      } else {
+        let current = this.head;
+        while (current && current.priority >= priority) {
+          current = current.next;
+        }
+
+        // Insert the new task into the list
+        if (!current) {
+          this.tail.next = newTask;
+          newTask.prev = this.tail;
+          this.tail = newTask;
+        } else {
+          if (current.prev) {
+            current.prev.next = newTask;
+            newTask.prev = current.prev;
+          } else {
+            this.head = newTask;
+          }
+          newTask.next = current;
+          current.prev = newTask;
+        }
+      }
+    }
+
+    // Execute the highest priority task (head of the list)
+    executeNextTask() {
+      if (!this.head) {
+        document.getElementById('statusMessage').textContent = "No tasks to execute.";
+        return;
+      }
+
+      const taskToExecute = this.head;
+      const taskName = taskToExecute.name;
+      const taskDuration = taskToExecute.duration;
+      const taskPriority = taskToExecute.priority;
+
+      // Simulate task execution by waiting for the duration
+      setTimeout(() => {
+        this.removeTask(taskToExecute);
+        document.getElementById('statusMessage').textContent = `Task ${taskName} (Priority: ${taskPriority}) executed and removed after ${taskDuration}s.`;
+        this.updateTaskList();
+      }, taskDuration * 1000); // Simulate task duration in seconds
+    }
+
+    // Remove the task from the list
+    removeTask(task) {
+      if (task.prev) {
+        task.prev.next = task.next;
+      } else {
+        this.head = task.next;
+      }
+
+      if (task.next) {
+        task.next.prev = task.prev;
+      } else {
+        this.tail = task.prev;
+      }
+    }
+
+    // Return the list of tasks in the scheduler
+    getTasks() {
+      const tasks = [];
+      let current = this.head;
+      while (current) {
+        tasks.push(current);
+        current = current.next;
+      }
+      return tasks;
+    }
+
+    // Update the displayed task list
+    updateTaskList() {
+      const taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+
+      const tasks = this.getTasks();
+      tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.textContent = `${task.name} (Priority: ${task.priority}, Duration: ${task.duration}s)`;
+        taskList.appendChild(li);
+      });
+    }
+  }
+
+  const scheduler = new TaskScheduler();
+
+  // Add a task to the scheduler
+  function addTask() {
+    const name = document.getElementById('taskName').value;
+    const priority = parseInt(document.getElementById('taskPriority').value);
+    const duration = parseInt(document.getElementById('taskDuration').value);
+
+    if (!name || isNaN(priority) || isNaN(duration)) {
+      alert('Please enter valid task details.');
+      return;
+    }
+
+    scheduler.addTask(name, priority, duration);
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskPriority').value = '';
+    document.getElementById('taskDuration').value = '';
+
+    scheduler.updateTaskList(); // Update the task list after adding a task
+  }
+
+  // Execute the next highest-priority task
+  function executeNextTask() {
+    scheduler.executeNextTask();
+  }
+</script>
+
+</body>
+</html>

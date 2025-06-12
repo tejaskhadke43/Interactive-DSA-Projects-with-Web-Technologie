@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inventory Search with Interpolation Search</h1>
+        <label for="searchItem">Search Item:</label>
+        <input type="number" id="searchItem" placeholder="Enter item to search">
+        <button onclick="searchInventory()">Search</button>
+        <div class="output" id="output"></div>
+    </div>
+    <script>
+        // Example inventory array (sorted and uniformly distributed)
+        const inventory = Array.from({ length: 1000 }, (_, i) => i + 1);
+
+        // Interpolation Search
+        function interpolationSearch(arr, x) {
+            let low = 0, high = arr.length - 1;
+
+            while (low <= high && x >= arr[low] && x <= arr[high]) {
+                if (low === high) {
+                    return arr[low] === x ? low : -1;
+                }
+
+                // Estimate the position
+                const pos = low + Math.floor(((x - arr[low]) * (high - low)) / (arr[high] - arr[low]));
+
+                if (arr[pos] === x) {
+                    return pos;
+                }
+                if (arr[pos] < x) {
+                    low = pos + 1;
+                } else {
+                    high = pos - 1;
+                }
+            }
+            return -1;
+        }
+
+        // Binary Search
+        function binarySearch(arr, x) {
+            let low = 0, high = arr.length - 1;
+
+            while (low <= high) {
+                const mid = Math.floor((low + high) / 2);
+
+                if (arr[mid] === x) {
+                    return mid;
+                }
+                if (arr[mid] < x) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            return -1;
+        }
+
+        // Linear Search
+        function linearSearch(arr, x) {
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] === x) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // Function to search the inventory using all three methods
+        function searchInventory() {
+            const item = parseInt(document.getElementById("searchItem").value, 10);
+            const outputDiv = document.getElementById("output");
+
+            if (isNaN(item)) {
+                outputDiv.textContent = "Please enter a valid number.";
+                return;
+            }
+
+            const results = [];
+
+            // Measure time for Interpolation Search
+            const t0 = performance.now();
+            const interpolationResult = interpolationSearch(inventory, item);
+            const t1 = performance.now();
+            results.push(`Interpolation Search: ${interpolationResult !== -1 ? "Found at index " + interpolationResult : "Not found"} (Time: ${(t1 - t0).toFixed(4)} ms)`);
+
+            // Measure time for Binary Search
+            const t2 = performance.now();
+            const binaryResult = binarySearch(inventory, item);
+            const t3 = performance.now();
+            results.push(`Binary Search: ${binaryResult !== -1 ? "Found at index " + binaryResult : "Not found"} (Time: ${(t3 - t2).toFixed(4)} ms)`);
+
+            // Measure time for Linear Search
+            const t4 = performance.now();
+            const linearResult = linearSearch(inventory, item);
+            const t5 = performance.now();
+            results.push(`Linear Search: ${linearResult !== -1 ? "Found at index " + linearResult : "Not found"} (Time: ${(t5 - t4).toFixed(4)} ms)`);
+
+            outputDiv.textContent = results.join("\n");
+        }
+    </script>
+</body>
+</html>

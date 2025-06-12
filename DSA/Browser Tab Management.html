@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Tabs Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 600px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      background-color: #e0e0e0;
+      padding: 8px 16px;
+      border-radius: 4px;
+      margin-right: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab.active {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .buttons button {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .buttons button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Browser Tabs Management</h2>
+
+  <div class="tabs" id="tabs">
+    <!-- Tabs will be dynamically added here -->
+  </div>
+
+  <div class="buttons">
+    <button onclick="openTab()">Open New Tab</button>
+    <button onclick="closeTab()">Close Current Tab</button>
+  </div>
+</div>
+
+<script>
+  class TabNode {
+    constructor(tabId, title) {
+      this.tabId = tabId; // Unique identifier for the tab
+      this.title = title; // Tab title
+      this.next = null; // Pointer to the next tab
+    }
+  }
+
+  class TabManager {
+    constructor() {
+      this.head = null;  // Head of the singly linked list (first tab)
+      this.tail = null;  // Tail of the singly linked list (last tab)
+      this.currentTab = null; // Pointer to the current active tab
+      this.tabCount = 0; // Count of the open tabs
+    }
+
+    // Open a new tab
+    openTab() {
+      const tabId = this.tabCount++;
+      const title = `Tab ${tabId + 1}`;
+      const newTab = new TabNode(tabId, title);
+
+      if (!this.head) {
+        // If no tabs are open, set the new tab as the head and tail
+        this.head = newTab;
+        this.tail = newTab;
+        this.currentTab = newTab;  // The first tab is active by default
+      } else {
+        // Otherwise, add the new tab to the end of the list
+        this.tail.next = newTab;
+        this.tail = newTab;
+      }
+
+      this.updateTabsDisplay();
+    }
+
+    // Close the current tab
+    closeTab() {
+      if (!this.currentTab) return;  // No tab to close
+
+      if (this.head === this.tail) {
+        // Only one tab is open, so we close it and reset the list
+        this.head = null;
+        this.tail = null;
+        this.currentTab = null;
+      } else {
+        // Find the tab previous to the current tab
+        let prevTab = null;
+        let current = this.head;
+        while (current && current !== this.currentTab) {
+          prevTab = current;
+          current = current.next;
+        }
+
+        // Remove the current tab
+        if (prevTab) {
+          prevTab.next = this.currentTab.next;
+        }
+
+        // If the current tab was the tail, update the tail
+        if (this.currentTab === this.tail) {
+          this.tail = prevTab;
+        }
+
+        this.currentTab = this.currentTab.next || this.head; // Set next tab as current
+      }
+
+      this.updateTabsDisplay();
+    }
+
+    // Switch to the next tab
+    switchTab() {
+      if (this.currentTab && this.currentTab.next) {
+        this.currentTab = this.currentTab.next;
+        this.updateTabsDisplay();
+      }
+    }
+
+    // Update the display of the tabs
+    updateTabsDisplay() {
+      const tabsContainer = document.getElementById('tabs');
+      tabsContainer.innerHTML = ''; // Clear the current list of tabs
+
+      let currentTab = this.head;
+      while (currentTab) {
+        const tabElement = document.createElement('div');
+        tabElement.className = 'tab';
+        tabElement.textContent = currentTab.title;
+
+        if (currentTab === this.currentTab) {
+          tabElement.classList.add('active');
+        }
+
+        // When a tab is clicked, set it as the current tab
+        tabElement.onclick = () => this.setCurrentTab(currentTab);
+
+        tabsContainer.appendChild(tabElement);
+
+        currentTab = currentTab.next;
+      }
+    }
+
+    // Set a specific tab as the current tab
+    setCurrentTab(tab) {
+      this.currentTab = tab;
+      this.updateTabsDisplay();
+    }
+  }
+
+  const tabManager = new TabManager();
+
+  // Open a new tab
+  function openTab() {
+    tabManager.openTab();
+  }
+
+  // Close the current tab
+  function closeTab() {
+    tabManager.closeTab();
+  }
+
+  // Switch to the next tab
+  function switchTab() {
+    tabManager.switchTab();
+  }
+
+  // Initially open one tab
+  tabManager.openTab();
+</script>
+
+</body>
+</html>

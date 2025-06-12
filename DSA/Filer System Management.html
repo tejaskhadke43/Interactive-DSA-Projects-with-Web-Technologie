@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File System Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #file-system {
+            margin-bottom: 20px;
+        }
+        #file-system ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        #file-system li {
+            margin: 5px 0;
+        }
+        #actions {
+            margin-bottom: 20px;
+        }
+        .button {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        input[type="text"] {
+            padding: 5px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>File System Simulation</h1>
+
+    <div id="file-system">
+        <h2>File System Tree</h2>
+        <ul id="file-list"></ul>
+    </div>
+
+    <div id="actions">
+        <input type="text" id="file-name" placeholder="Enter file/folder name">
+        <button class="button" onclick="createFile()">Create File</button>
+        <button class="button" onclick="createFolder()">Create Folder</button>
+        <button class="button" onclick="deleteFile()">Delete File/Folder</button>
+        <button class="button" onclick="listPreOrder()">Pre-Order Traversal</button>
+        <button class="button" onclick="listPostOrder()">Post-Order Traversal</button>
+        <button class="button" onclick="listInOrder()">In-Order Traversal</button>
+    </div>
+
+    <script>
+        // File system tree representation
+        class FileSystemNode {
+            constructor(name, type) {
+                this.name = name;
+                this.type = type; // 'file' or 'folder'
+                this.children = [];
+            }
+        }
+
+        // Create the root of the file system (a folder)
+        const root = new FileSystemNode('root', 'folder');
+
+        // Function to render the file system as an HTML list
+        function renderFileSystem(node, parentElement) {
+            const li = document.createElement('li');
+            li.textContent = node.name + (node.type === 'folder' ? ' (Folder)' : ' (File)');
+            parentElement.appendChild(li);
+
+            if (node.children.length > 0) {
+                const ul = document.createElement('ul');
+                li.appendChild(ul);
+                node.children.forEach(child => renderFileSystem(child, ul));
+            }
+        }
+
+        // Initialize the file system display
+        function displayFileSystem() {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = ''; // Clear the previous file list
+            renderFileSystem(root, fileList);
+        }
+
+        // Function to create a new file
+        function createFile() {
+            const name = document.getElementById('file-name').value;
+            if (name) {
+                const newFile = new FileSystemNode(name, 'file');
+                root.children.push(newFile);
+                displayFileSystem();
+                document.getElementById('file-name').value = ''; // Clear input
+            } else {
+                alert('Please enter a file name.');
+            }
+        }
+
+        // Function to create a new folder
+        function createFolder() {
+            const name = document.getElementById('file-name').value;
+            if (name) {
+                const newFolder = new FileSystemNode(name, 'folder');
+                root.children.push(newFolder);
+                displayFileSystem();
+                document.getElementById('file-name').value = ''; // Clear input
+            } else {
+                alert('Please enter a folder name.');
+            }
+        }
+
+        // Function to delete a file or folder
+        function deleteFile() {
+            const name = document.getElementById('file-name').value;
+            if (name) {
+                const index = root.children.findIndex(child => child.name === name);
+                if (index !== -1) {
+                    root.children.splice(index, 1);
+                    displayFileSystem();
+                    document.getElementById('file-name').value = ''; // Clear input
+                } else {
+                    alert('File or Folder not found.');
+                }
+            } else {
+                alert('Please enter a file/folder name to delete.');
+            }
+        }
+
+        // Pre-order Traversal
+        function listPreOrder() {
+            const result = [];
+            function preOrder(node) {
+                result.push(node.name);
+                node.children.forEach(child => preOrder(child));
+            }
+            preOrder(root);
+            alert('Pre-order Traversal: ' + result.join(' -> '));
+        }
+
+        // Post-order Traversal
+        function listPostOrder() {
+            const result = [];
+            function postOrder(node) {
+                node.children.forEach(child => postOrder(child));
+                result.push(node.name);
+            }
+            postOrder(root);
+            alert('Post-order Traversal: ' + result.join(' -> '));
+        }
+
+        // In-order Traversal (assuming folders are the root nodes)
+        function listInOrder() {
+            const result = [];
+            function inOrder(node) {
+                if (node.children.length > 0) {
+                    inOrder(node.children[0]); // Traverse left
+                }
+                result.push(node.name);
+                for (let i = 1; i < node.children.length; i++) {
+                    inOrder(node.children[i]); // Traverse right
+                }
+            }
+            inOrder(root);
+            alert('In-order Traversal: ' + result.join(' -> '));
+        }
+
+        // Initial display of the file system
+        displayFileSystem();
+    </script>
+</body>
+</html>

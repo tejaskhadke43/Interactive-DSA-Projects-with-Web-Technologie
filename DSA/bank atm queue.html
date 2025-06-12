@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank ATM Queue Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .queue {
+            margin-top: 20px;
+        }
+        .queue ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .queue li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .queue li.priority {
+            background-color: #f39c12;
+            font-weight: bold;
+        }
+        .queue li.processing {
+            background-color: #3498db;
+            color: white;
+        }
+        .queue li.completed {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .form-container input,
+        .form-container button,
+        .form-container select {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-container input {
+            flex: 2;
+        }
+        .form-container select,
+        .form-container button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Bank ATM Queue Simulation</h1>
+
+    <div class="container">
+        <div class="form-container">
+            <input type="text" id="customerName" placeholder="Customer Name">
+            <select id="transactionType">
+                <option value="Deposit">Deposit</option>
+                <option value="Withdrawal">Withdrawal</option>
+                <option value="Balance Check">Balance Check</option>
+            </select>
+            <button onclick="addCustomer()">Add Customer</button>
+        </div>
+
+        <div class="queue">
+            <h3>Current Queue</h3>
+            <ul id="queueList"></ul>
+        </div>
+
+        <div class="form-container">
+            <button onclick="processNextCustomer()">Process Next Customer</button>
+        </div>
+    </div>
+
+    <script>
+        // Class to represent a customer and their transaction details
+        class Customer {
+            constructor(name, transactionType, isPriority = false) {
+                this.name = name;
+                this.transactionType = transactionType;
+                this.status = 'Waiting'; // 'Waiting', 'Processing', or 'Completed'
+                this.isPriority = isPriority;
+                this.processingTime = this.getProcessingTime(transactionType);
+            }
+
+            // Determine the processing time based on the transaction type
+            getProcessingTime(transactionType) {
+                if (transactionType === 'Deposit') return Math.floor(Math.random() * 3) + 2; // 2 to 4 seconds
+                if (transactionType === 'Withdrawal') return Math.floor(Math.random() * 3) + 3; // 3 to 5 seconds
+                return Math.floor(Math.random() * 2) + 1; // 1 to 2 seconds for Balance Check
+            }
+        }
+
+        // Queue to hold customers
+        let queue = [];
+
+        // Function to add customer to the queue
+        function addCustomer() {
+            const name = document.getElementById('customerName').value;
+            const transactionType = document.getElementById('transactionType').value;
+            const isPriority = Math.random() > 0.5; // Randomly decide priority (50% chance)
+            
+            if (!name) {
+                alert('Please enter the customer name.');
+                return;
+            }
+
+            const customer = new Customer(name, transactionType, isPriority);
+            if (isPriority) {
+                queue.unshift(customer); // Add to the front of the queue for priority
+            } else {
+                queue.push(customer); // Regular queue behavior
+            }
+
+            document.getElementById('customerName').value = ''; // Clear the input
+            updateQueueDisplay();
+        }
+
+        // Function to update the queue display
+        function updateQueueDisplay() {
+            const queueList = document.getElementById('queueList');
+            queueList.innerHTML = '';
+
+            queue.forEach((customer, index) => {
+                const li = document.createElement('li');
+                li.className = customer.isPriority ? 'priority' : '';
+                li.innerHTML = `
+                    ${customer.name} - ${customer.transactionType} 
+                    <span class="status">${customer.status}</span>
+                `;
+                queueList.appendChild(li);
+            });
+        }
+
+        // Function to process the next customer in the queue
+        function processNextCustomer() {
+            if (queue.length === 0) {
+                alert('No customers in the queue to process.');
+                return;
+            }
+
+            const customer = queue.shift(); // Remove the first customer (FIFO)
+            customer.status = 'Processing';
+            updateQueueDisplay();
+
+            setTimeout(() => {
+                customer.status = 'Completed';
+                updateQueueDisplay();
+            }, customer.processingTime * 1000);
+        }
+
+        // Initial Queue Display
+        updateQueueDisplay();
+    </script>
+</body>
+</html>

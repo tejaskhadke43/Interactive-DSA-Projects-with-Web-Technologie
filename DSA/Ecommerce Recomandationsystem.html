@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Recommendation System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form, .query {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .product-list, .recommendations {
+            margin-top: 30px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Product Recommendation System</h1>
+
+        <!-- Form for adding products -->
+        <div class="form">
+            <h2>Add a New Product</h2>
+            <label for="productName">Product Name:</label>
+            <input type="text" id="productName" placeholder="Enter product name">
+            <label for="productRating">Rating (1 to 5):</label>
+            <input type="number" id="productRating" min="1" max="5" placeholder="Enter product rating">
+            <button onclick="addProduct()">Add Product</button>
+        </div>
+
+        <!-- Section for rating range query -->
+        <div class="query">
+            <h2>Find Products by Rating Range</h2>
+            <label for="minRating">Min Rating:</label>
+            <input type="number" id="minRating" min="1" max="5">
+            <label for="maxRating">Max Rating:</label>
+            <input type="number" id="maxRating" min="1" max="5">
+            <button onclick="findProductsInRange()">Find Products</button>
+        </div>
+
+        <!-- Section for displaying products -->
+        <div class="product-list">
+            <h2>Products</h2>
+            <ul id="productList"></ul>
+        </div>
+
+        <!-- Section for displaying product recommendations -->
+        <div class="recommendations">
+            <h2>Product Recommendations</h2>
+            <ul id="recommendedProducts"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Product class definition
+        class Product {
+            constructor(id, name, rating) {
+                this.id = id;
+                this.name = name;
+                this.rating = rating;
+                this.left = null;
+                this.right = null;
+            }
+        }
+
+        // Binary Search Tree class definition
+        class BST {
+            constructor() {
+                this.root = null;
+            }
+
+            insert(root, product) {
+                if (root === null) {
+                    return product;
+                }
+
+                if (product.rating < root.rating) {
+                    root.left = this.insert(root.left, product);
+                } else {
+                    root.right = this.insert(root.right, product);
+                }
+
+                return root;
+            }
+
+            insertProduct(product) {
+                this.root = this.insert(this.root, product);
+            }
+
+            findProductsInRange(root, minRating, maxRating) {
+                if (root === null) {
+                    return [];
+                }
+
+                let productsInRange = [];
+
+                if (minRating <= root.rating && root.rating <= maxRating) {
+                    productsInRange.push(root);
+                }
+
+                if (root.rating > minRating) {
+                    productsInRange = productsInRange.concat(this.findProductsInRange(root.left, minRating, maxRating));
+                }
+
+                if (root.rating < maxRating) {
+                    productsInRange = productsInRange.concat(this.findProductsInRange(root.right, minRating, maxRating));
+                }
+
+                return productsInRange;
+            }
+        }
+
+        // Instantiate BST
+        const bst = new BST();
+        let productCounter = 1;
+
+        // Add a product
+        function addProduct() {
+            const name = document.getElementById("productName").value;
+            const rating = parseInt(document.getElementById("productRating").value);
+
+            if (name && !isNaN(rating) && rating >= 1 && rating <= 5) {
+                const newProduct = new Product(productCounter++, name, rating);
+                bst.insertProduct(newProduct);
+                displayProducts();
+                alert("Product added successfully!");
+            } else {
+                alert("Please provide valid inputs!");
+            }
+        }
+
+        // Display all products in the BST
+        function displayProducts() {
+            const productList = document.getElementById("productList");
+            productList.innerHTML = "";
+
+            const products = traverseInOrder(bst.root);
+            products.forEach(product => {
+                const li = document.createElement("li");
+                li.textContent = `${product.name} - Rating: ${product.rating}`;
+                productList.appendChild(li);
+            });
+        }
+
+        // In-order traversal to get products in sorted order of rating
+        function traverseInOrder(root) {
+            let products = [];
+            if (root !== null) {
+                products = products.concat(traverseInOrder(root.left));
+                products.push(root);
+                products = products.concat(traverseInOrder(root.right));
+            }
+            return products;
+        }
+
+        // Find products in a rating range
+        function findProductsInRange() {
+            const minRating = parseInt(document.getElementById("minRating").value);
+            const maxRating = parseInt(document.getElementById("maxRating").value);
+
+            if (minRating >= 1 && maxRating <= 5 && minRating <= maxRating) {
+                const productsInRange = bst.findProductsInRange(bst.root, minRating, maxRating);
+                displayRecommendations(productsInRange);
+            } else {
+                alert("Please enter a valid rating range!");
+            }
+        }
+
+        // Display products within rating range
+        function displayRecommendations(products) {
+            const recommendedProducts = document.getElementById("recommendedProducts");
+            recommendedProducts.innerHTML = "";
+
+            if (products.length === 0) {
+                recommendedProducts.innerHTML = "<li>No products found in this rating range.</li>";
+            } else {
+                products.forEach(product => {
+                    const li = document.createElement("li");
+                    li.textContent = `${product.name} - Rating: ${product.rating}`;
+                    recommendedProducts.appendChild(li);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

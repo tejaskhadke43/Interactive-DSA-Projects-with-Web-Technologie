@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Span Problem</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input-container {
+            margin-bottom: 20px;
+        }
+        .input-container input, .input-container button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .input-container input {
+            width: 300px;
+        }
+        .output-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .output-container pre {
+            font-size: 18px;
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            width: 80%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Stock Span Problem</h1>
+    <div class="container">
+        <div class="input-container">
+            <label for="prices">Enter Stock Prices (comma separated):</label>
+            <input type="text" id="prices" placeholder="e.g., 100, 80, 60, 70, 60, 75, 85">
+            <button onclick="calculateSpan()">Calculate Span</button>
+        </div>
+        <div class="output-container">
+            <h3>Stock Span for Each Day:</h3>
+            <pre id="result"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Function to calculate the Stock Span for each day
+        function calculateSpan() {
+            const pricesInput = document.getElementById('prices').value;
+            const prices = pricesInput.split(',').map(price => parseInt(price.trim()));
+
+            if (prices.length === 0) {
+                alert('Please enter valid stock prices.');
+                return;
+            }
+
+            const n = prices.length;
+            const span = Array(n);  // Array to store the span for each day
+            const stack = [];       // Stack to store the indices of the stock prices
+
+            for (let i = 0; i < n; i++) {
+                // Calculate span for prices[i]
+                while (stack.length > 0 && prices[stack[stack.length - 1]] <= prices[i]) {
+                    stack.pop(); // Pop elements that are smaller than or equal to the current price
+                }
+
+                // If stack is empty, it means the current price is greater than all previous prices
+                span[i] = stack.length === 0 ? i + 1 : i - stack[stack.length - 1];
+
+                // Push the current index to the stack
+                stack.push(i);
+            }
+
+            // Display the result
+            document.getElementById('result').textContent = span.join(', ');
+        }
+    </script>
+
+</body>
+</html>

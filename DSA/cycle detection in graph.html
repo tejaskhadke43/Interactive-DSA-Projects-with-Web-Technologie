@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Detection in Graph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        #graphRepresentation {
+            margin-top: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .node {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Cycle Detection in Graph (DFS)</h1>
+    <div class="container">
+        <button class="button" onclick="addEdge()">Add Edge</button>
+        <button class="button" onclick="checkCycle()">Check for Cycles</button>
+        
+        <div id="graphRepresentation"></div>
+    </div>
+
+    <script>
+        class Graph {
+            constructor(vertices, directed = true) {
+                this.vertices = vertices; // Number of vertices in the graph
+                this.directed = directed; // Whether the graph is directed
+                this.adjList = new Map(); // Adjacency list to store the graph
+
+                for (let i = 0; i < this.vertices; i++) {
+                    this.adjList.set(i, []);
+                }
+            }
+
+            // Add an edge to the graph
+            addEdge(v, w) {
+                this.adjList.get(v).push(w);
+                if (!this.directed) {
+                    this.adjList.get(w).push(v);
+                }
+            }
+
+            // Helper function for DFS traversal
+            dfs(v, visited, recursionStack) {
+                visited[v] = true;
+                recursionStack[v] = true;
+
+                // Visit all the adjacent vertices of v
+                for (let neighbor of this.adjList.get(v)) {
+                    // If the node is already in the recursion stack, a cycle is detected
+                    if (recursionStack[neighbor]) {
+                        return true;
+                    }
+                    // If the neighbor hasn't been visited, recurse
+                    if (!visited[neighbor]) {
+                        if (this.dfs(neighbor, visited, recursionStack)) {
+                            return true;
+                        }
+                    }
+                }
+
+                // Remove from the recursion stack after visiting all neighbors
+                recursionStack[v] = false;
+                return false;
+            }
+
+            // Function to check for cycles in the directed graph
+            detectCycle() {
+                let visited = Array(this.vertices).fill(false);
+                let recursionStack = Array(this.vertices).fill(false);
+
+                for (let i = 0; i < this.vertices; i++) {
+                    if (!visited[i]) {
+                        if (this.dfs(i, visited, recursionStack)) {
+                            return true; // Cycle detected
+                        }
+                    }
+                }
+
+                return false; // No cycle found
+            }
+
+            // Helper function for DFS traversal (for undirected graph)
+            dfsUndirected(v, visited, parent) {
+                visited[v] = true;
+
+                for (let neighbor of this.adjList.get(v)) {
+                    // If the neighbor is not visited, recurse
+                    if (!visited[neighbor]) {
+                        if (this.dfsUndirected(neighbor, visited, v)) {
+                            return true;
+                        }
+                    }
+                    // If the neighbor is visited and not the parent, a cycle is found
+                    else if (neighbor !== parent) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            // Function to check for cycles in the undirected graph
+            detectCycleUndirected() {
+                let visited = Array(this.vertices).fill(false);
+
+                for (let i = 0; i < this.vertices; i++) {
+                    if (!visited[i]) {
+                        if (this.dfsUndirected(i, visited, -1)) {
+                            return true; // Cycle detected
+                        }
+                    }
+                }
+
+                return false; // No cycle found
+            }
+        }
+
+        let graph;
+        let vertexCount = 5; // Default number of vertices
+        let directedGraph = true; // Set to true for directed graph, false for undirected graph
+
+        // Initialize the graph
+        function initGraph() {
+            graph = new Graph(vertexCount, directedGraph);
+            updateGraphRepresentation();
+        }
+
+        // Add an edge to the graph (user input)
+        function addEdge() {
+            let from = prompt("Enter the source vertex (0 to " + (vertexCount - 1) + "):");
+            let to = prompt("Enter the destination vertex (0 to " + (vertexCount - 1) + "):");
+            from = parseInt(from);
+            to = parseInt(to);
+
+            if (from >= 0 && from < vertexCount && to >= 0 && to < vertexCount) {
+                graph.addEdge(from, to);
+                updateGraphRepresentation();
+            } else {
+                alert("Invalid vertex numbers.");
+            }
+        }
+
+        // Check for cycles and display the result
+        function checkCycle() {
+            let hasCycle = directedGraph ? graph.detectCycle() : graph.detectCycleUndirected();
+            let result = hasCycle ? "Cycle Detected!" : "No Cycle Found!";
+            alert(result);
+        }
+
+        // Update the graph representation on the page
+        function updateGraphRepresentation() {
+            let output = "<h3>Graph Representation:</h3><pre>";
+            graph.adjList.forEach((value, key) => {
+                output += `Vertex ${key}: ${value.join(", ")}\n`;
+            });
+            output += "</pre>";
+
+            document.getElementById("graphRepresentation").innerHTML = output;
+        }
+
+        // Initialize the graph when the page loads
+        window.onload = initGraph;
+    </script>
+</body>
+</html>

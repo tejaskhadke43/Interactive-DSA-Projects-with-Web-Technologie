@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approximation Algorithm for TSP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Approximation Algorithm for Traveling Salesman Problem</h1>
+    <button onclick="generateGraph()">Generate Random Graph</button>
+    <button onclick="findApproximation()">Find Approximation</button>
+    <canvas id="graphCanvas" width="600" height="600"></canvas>
+    <div id="output"></div>
+    <script>
+        const canvas = document.getElementById("graphCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let points = []; // Stores the nodes
+        let distances = []; // Stores the distance matrix
+        const nodeCount = 10; // Number of nodes in the graph
+
+        // Generate a random graph with points
+        function generateGraph() {
+            points = [];
+            distances = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Generate random points
+            for (let i = 0; i < nodeCount; i++) {
+                points.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                });
+            }
+
+            // Draw the points
+            points.forEach((point, index) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = "blue";
+                ctx.fill();
+                ctx.fillText(index, point.x + 10, point.y);
+            });
+
+            // Compute distances
+            distances = Array.from({ length: nodeCount }, () =>
+                Array(nodeCount).fill(0)
+            );
+            for (let i = 0; i < nodeCount; i++) {
+                for (let j = 0; j < nodeCount; j++) {
+                    distances[i][j] = Math.sqrt(
+                        Math.pow(points[i].x - points[j].x, 2) +
+                        Math.pow(points[i].y - points[j].y, 2)
+                    );
+                }
+            }
+            document.getElementById("output").textContent = "Graph generated!";
+        }
+
+        // Find TSP approximation using MST-based algorithm
+        function findApproximation() {
+            const mst = primMST(distances);
+            const preOrder = dfsTraversal(mst, 0); // Preorder traversal for approximation
+            const path = preOrder.concat(preOrder[0]); // Form the tour
+
+            // Calculate the total path length
+            let totalDistance = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                totalDistance += distances[path[i]][path[i + 1]];
+            }
+
+            // Draw the path on the canvas
+            drawPath(path);
+
+            // Output the results
+            document.getElementById("output").textContent = `Approximated TSP Path: ${path.join(
+                " -> "
+            )}, Total Distance: ${totalDistance.toFixed(2)}`;
+        }
+
+        // Prim's Algorithm to find the Minimum Spanning Tree (MST)
+        function primMST(graph) {
+            const n = graph.length;
+            const parent = Array(n).fill(null);
+            const key = Array(n).fill(Infinity);
+            const inMST = Array(n).fill(false);
+
+            key[0] = 0; // Start from the first node
+            parent[0] = -1;
+
+            for (let count = 0; count < n - 1; count++) {
+                let u = minKey(key, inMST);
+                inMST[u] = true;
+
+                for (let v = 0; v < n; v++) {
+                    if (graph[u][v] && !inMST[v] && graph[u][v] < key[v]) {
+                        parent[v] = u;
+                        key[v] = graph[u][v];
+                    }
+                }
+            }
+
+            // Convert parent array into an adjacency list
+            const mst = Array.from({ length: n }, () => []);
+            for (let i = 1; i < n; i++) {
+                mst[parent[i]].push(i);
+                mst[i].push(parent[i]);
+            }
+            return mst;
+        }
+
+        // Find the vertex with the minimum key value
+        function minKey(key, inMST) {
+            let min = Infinity;
+            let minIndex = -1;
+
+            for (let v = 0; v < key.length; v++) {
+                if (!inMST[v] && key[v] < min) {
+                    min = key[v];
+                    minIndex = v;
+                }
+            }
+            return minIndex;
+        }
+
+        // Perform DFS traversal on the MST
+        function dfsTraversal(graph, start) {
+            const visited = Array(graph.length).fill(false);
+            const order = [];
+            function dfs(node) {
+                visited[node] = true;
+                order.push(node);
+                for (const neighbor of graph[node]) {
+                    if (!visited[neighbor]) {
+                        dfs(neighbor);
+                    }
+                }
+            }
+            dfs(start);
+            return order;
+        }
+
+        // Draw the path on the canvas
+        function drawPath(path) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Redraw points
+            points.forEach((point, index) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = "blue";
+                ctx.fill();
+                ctx.fillText(index, point.x + 10, point.y);
+            });
+
+            // Draw the path
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(points[path[0]].x, points[path[0]].y);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(points[path[i]].x, points[path[i]].y);
+            }
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>

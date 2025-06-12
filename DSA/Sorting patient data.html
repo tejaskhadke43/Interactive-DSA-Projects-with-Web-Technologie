@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Emergency Sorting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: left;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hospital Emergency Room - Patient Sorting</h1>
+        <label for="nameInput">Patient Name:</label>
+        <input type="text" id="nameInput" placeholder="Enter patient name">
+        <label for="levelInput">Emergency Level (1-10):</label>
+        <input type="number" id="levelInput" placeholder="Enter emergency level" min="1" max="10">
+        <br>
+        <button onclick="addPatient()">Add Patient</button>
+        <button onclick="sortPatients()">Sort by Emergency Level</button>
+        <div class="output" id="output">
+            <h2>Patient List</h2>
+            <table id="patientTable">
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Emergency Level</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        const patients = [];
+
+        // Function to add a patient to the list
+        function addPatient() {
+            const name = document.getElementById("nameInput").value.trim();
+            const level = parseInt(document.getElementById("levelInput").value, 10);
+
+            if (!name || isNaN(level) || level < 1 || level > 10) {
+                alert("Please enter a valid name and emergency level (1-10).");
+                return;
+            }
+
+            patients.push({ name, level });
+            document.getElementById("nameInput").value = "";
+            document.getElementById("levelInput").value = "";
+            updateTable();
+        }
+
+        // Function to update the patient table
+        function updateTable() {
+            const tableBody = document.querySelector("#patientTable tbody");
+            tableBody.innerHTML = "";
+
+            patients.forEach(patient => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${patient.name}</td>
+                    <td>${patient.level}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Heapify function for heap sort
+        function heapify(arr, n, i) {
+            let largest = i; // Initialize largest as root
+            const left = 2 * i + 1;
+            const right = 2 * i + 2;
+
+            // If left child is larger than root
+            if (left < n && arr[left].level > arr[largest].level) {
+                largest = left;
+            }
+
+            // If right child is larger than largest so far
+            if (right < n && arr[right].level > arr[largest].level) {
+                largest = right;
+            }
+
+            // If largest is not root
+            if (largest !== i) {
+                [arr[i], arr[largest]] = [arr[largest], arr[i]]; // Swap
+
+                // Recursively heapify the affected sub-tree
+                heapify(arr, n, largest);
+            }
+        }
+
+        // Heap Sort function
+        function heapSort(arr) {
+            const n = arr.length;
+
+            // Build heap (rearrange array)
+            for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                heapify(arr, n, i);
+            }
+
+            // One by one extract an element from heap
+            for (let i = n - 1; i > 0; i--) {
+                // Move current root to end
+                [arr[0], arr[i]] = [arr[i], arr[0]];
+
+                // Call max heapify on the reduced heap
+                heapify(arr, i, 0);
+            }
+        }
+
+        // Sort patients by emergency level
+        function sortPatients() {
+            heapSort(patients);
+            updateTable();
+        }
+    </script>
+</body>
+</html>

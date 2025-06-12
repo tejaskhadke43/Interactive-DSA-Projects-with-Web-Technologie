@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Hash Table</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    .input-container input {
+      padding: 8px;
+      font-size: 16px;
+      width: 200px;
+      margin-right: 10px;
+    }
+    .input-container button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .output {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .table-container {
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Employee Hash Table</h1>
+
+  <div class="container">
+    <div class="input-container">
+      <input type="text" id="employeeIdInput" placeholder="Employee ID" />
+      <input type="text" id="employeeNameInput" placeholder="Employee Name" />
+      <input type="text" id="employeePositionInput" placeholder="Employee Position" />
+      <button onclick="addEmployee()">Add Employee</button>
+    </div>
+
+    <div class="input-container">
+      <input type="text" id="searchIdInput" placeholder="Search by Employee ID" />
+      <button onclick="searchEmployee()">Search Employee</button>
+    </div>
+
+    <div class="input-container">
+      <input type="text" id="deleteIdInput" placeholder="Delete Employee by ID" />
+      <button onclick="deleteEmployee()">Delete Employee</button>
+    </div>
+  </div>
+
+  <div class="output" id="status"></div>
+
+  <div class="table-container">
+    <h2>Employee Hash Table:</h2>
+    <table id="hashTable"></table>
+  </div>
+
+  <script>
+    class HashTable {
+      constructor(size, collisionMethod = 'chaining') {
+        this.size = size;
+        this.table = new Array(size);
+        this.collisionMethod = collisionMethod;
+
+        // Initialize the table with empty arrays for chaining
+        for (let i = 0; i < size; i++) {
+          this.table[i] = this.collisionMethod === 'chaining' ? [] : null;
+        }
+      }
+
+      // Hash function
+      hash(key) {
+        let hashValue = 0;
+        for (let i = 0; i < key.length; i++) {
+          hashValue = (hashValue * 31 + key.charCodeAt(i)) % this.size;
+        }
+        return hashValue;
+      }
+
+      // Add employee record
+      add(employeeId, name, position) {
+        const index = this.hash(employeeId);
+        const record = { employeeId, name, position };
+
+        if (this.collisionMethod === 'chaining') {
+          // Chaining: Use a linked list (array) for each index
+          this.table[index].push(record);
+        } else if (this.collisionMethod === 'openAddressing') {
+          // Open addressing: Linear probing for next available slot
+          let i = index;
+          while (this.table[i] !== null && this.table[i].employeeId !== employeeId) {
+            i = (i + 1) % this.size;
+          }
+          this.table[i] = record;
+        }
+      }
+
+      // Search for an employee by ID
+      search(employeeId) {
+        const index = this.hash(employeeId);
+
+        if (this.collisionMethod === 'chaining') {
+          for (let record of this.table[index]) {
+            if (record.employeeId === employeeId) {
+              return record;
+            }
+          }
+        } else if (this.collisionMethod === 'openAddressing') {
+          let i = index;
+          while (this.table[i] !== null) {
+            if (this.table[i].employeeId === employeeId) {
+              return this.table[i];
+            }
+            i = (i + 1) % this.size;
+          }
+        }
+        return null;
+      }
+
+      // Delete an employee by ID
+      delete(employeeId) {
+        const index = this.hash(employeeId);
+
+        if (this.collisionMethod === 'chaining') {
+          this.table[index] = this.table[index].filter(record => record.employeeId !== employeeId);
+        } else if (this.collisionMethod === 'openAddressing') {
+          let i = index;
+          while (this.table[i] !== null) {
+            if (this.table[i].employeeId === employeeId) {
+              this.table[i] = null;
+              break;
+            }
+            i = (i + 1) % this.size;
+          }
+        }
+      }
+
+      // Display the table as HTML
+      display() {
+        const tableElement = document.getElementById('hashTable');
+        tableElement.innerHTML = '';
+        for (let i = 0; i < this.size; i++) {
+          const records = this.table[i];
+          const row = document.createElement('tr');
+          const indexCell = document.createElement('td');
+          indexCell.textContent = i;
+          row.appendChild(indexCell);
+
+          const contentCell = document.createElement('td');
+          if (this.collisionMethod === 'chaining' && records.length > 0) {
+            contentCell.textContent = records.map(r => `ID: ${r.employeeId}, Name: ${r.name}, Position: ${r.position}`).join(' | ');
+          } else if (this.collisionMethod === 'openAddressing' && records !== null) {
+            contentCell.textContent = `ID: ${records ? records.employeeId : ''}, Name: ${records ? records.name : ''}, Position: ${records ? records.position : ''}`;
+          }
+          row.appendChild(contentCell);
+
+          tableElement.appendChild(row);
+        }
+      }
+    }
+
+    const hashTable = new HashTable(10, 'chaining'); // Initialize with size 10 and chaining method
+
+    // Function to add an employee
+    function addEmployee() {
+      const employeeId = document.getElementById('employeeIdInput').value.trim();
+      const name = document.getElementById('employeeNameInput').value.trim();
+      const position = document.getElementById('employeePositionInput').value.trim();
+
+      if (employeeId && name && position) {
+        hashTable.add(employeeId, name, position);
+        document.getElementById('status').textContent = `Employee ${name} added.`;
+        hashTable.display();
+      } else {
+        document.getElementById('status').textContent = 'Please fill all fields.';
+      }
+    }
+
+    // Function to search an employee
+    function searchEmployee() {
+      const employeeId = document.getElementById('searchIdInput').value.trim();
+      const employee = hashTable.search(employeeId);
+
+      if (employee) {
+        document.getElementById('status').textContent = `Employee Found: ${employee.name}, Position: ${employee.position}`;
+      } else {
+        document.getElementById('status').textContent = `Employee with ID ${employeeId} not found.`;
+      }
+    }
+
+    // Function to delete an employee
+    function deleteEmployee() {
+      const employeeId = document.getElementById('deleteIdInput').value.trim();
+      hashTable.delete(employeeId);
+      document.getElementById('status').textContent = `Employee with ID ${employeeId} deleted.`;
+      hashTable.display();
+    }
+
+    // Initial empty table display
+    hashTable.display();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Gaming Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .leaderboard-item {
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .red {
+            color: red;
+        }
+        .black {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dynamic Gaming Leaderboard</h1>
+    <div class="container">
+        <button class="button" onclick="addPlayer()">Add New Player</button>
+        <button class="button" onclick="gainPoints()">Player Gains Points</button>
+
+        <div id="leaderboard"></div>
+    </div>
+
+    <script>
+        // Red-Black Tree Node Class
+        class Node {
+            constructor(data, color) {
+                this.data = data; // [playerName, score]
+                this.color = color; // red or black
+                this.left = null;
+                this.right = null;
+                this.parent = null;
+            }
+        }
+
+        // Red-Black Tree Class
+        class RedBlackTree {
+            constructor() {
+                // Sentinel node
+                this.TNULL = new Node([null, 0], "black");
+                this.root = this.TNULL;
+            }
+
+            leftRotate(x) {
+                let y = x.right;
+                x.right = y.left;
+                if (y.left !== this.TNULL) {
+                    y.left.parent = x;
+                }
+                y.parent = x.parent;
+                if (x.parent === null) {
+                    this.root = y;
+                } else if (x === x.parent.left) {
+                    x.parent.left = y;
+                } else {
+                    x.parent.right = y;
+                }
+                y.left = x;
+                x.parent = y;
+            }
+
+            rightRotate(x) {
+                let y = x.left;
+                x.left = y.right;
+                if (y.right !== this.TNULL) {
+                    y.right.parent = x;
+                }
+                y.parent = x.parent;
+                if (x.parent === null) {
+                    this.root = y;
+                } else if (x === x.parent.right) {
+                    x.parent.right = y;
+                } else {
+                    x.parent.left = y;
+                }
+                y.right = x;
+                x.parent = y;
+            }
+
+            insertFixUp(k) {
+                while (k.parent.color === "red") {
+                    if (k.parent === k.parent.parent.left) {
+                        let u = k.parent.parent.right;
+                        if (u.color === "red") {
+                            k.parent.color = "black";
+                            u.color = "black";
+                            k.parent.parent.color = "red";
+                            k = k.parent.parent;
+                        } else {
+                            if (k === k.parent.right) {
+                                k = k.parent;
+                                this.leftRotate(k);
+                            }
+                            k.parent.color = "black";
+                            k.parent.parent.color = "red";
+                            this.rightRotate(k.parent.parent);
+                        }
+                    } else {
+                        let u = k.parent.parent.left;
+                        if (u.color === "red") {
+                            k.parent.color = "black";
+                            u.color = "black";
+                            k.parent.parent.color = "red";
+                            k = k.parent.parent;
+                        } else {
+                            if (k === k.parent.left) {
+                                k = k.parent;
+                                this.rightRotate(k);
+                            }
+                            k.parent.color = "black";
+                            k.parent.parent.color = "red";
+                            this.leftRotate(k.parent.parent);
+                        }
+                    }
+                    if (k === this.root) break;
+                }
+                this.root.color = "black";
+            }
+
+            insert(data) {
+                let node = new Node(data, "red");
+                let y = null;
+                let x = this.root;
+
+                // Traverse the tree to find the correct position
+                while (x !== this.TNULL) {
+                    y = x;
+                    if (node.data[1] < x.data[1]) {
+                        x = x.left;
+                    } else {
+                        x = x.right;
+                    }
+                }
+
+                node.parent = y;
+                if (y === null) {
+                    this.root = node;  // If tree is empty, set the node as root
+                } else if (node.data[1] < y.data[1]) {
+                    y.left = node;
+                } else {
+                    y.right = node;
+                }
+                node.left = this.TNULL;
+                node.right = this.TNULL;
+
+                // Fix up the tree after insertion
+                this.insertFixUp(node);
+            }
+
+            inorderHelper(node, result) {
+                if (node !== this.TNULL) {
+                    this.inorderHelper(node.left, result);
+                    result.push(node);
+                    this.inorderHelper(node.right, result);
+                }
+            }
+
+            getLeaderboard() {
+                let result = [];
+                this.inorderHelper(this.root, result);
+                return result.map(n => ({
+                    player: n.data[0],
+                    score: n.data[1],
+                    color: n.color
+                }));
+            }
+        }
+
+        // Global leaderboard instance
+        const leaderboardTree = new RedBlackTree();
+        let playerCount = 0;
+
+        // Function to add a new player
+        function addPlayer() {
+            playerCount++;
+            let playerName = `Player ${playerCount}`;
+            let score = Math.floor(Math.random() * 100);
+            leaderboardTree.insert([playerName, score]);
+            updateLeaderboard();
+        }
+
+        // Function to simulate a player gaining points
+        function gainPoints() {
+            if (playerCount > 0) {
+                let randomPlayer = Math.floor(Math.random() * playerCount) + 1;
+                let newScore = Math.floor(Math.random() * 100);
+                leaderboardTree.insert([`Player ${randomPlayer}`, newScore]);
+                updateLeaderboard();
+            }
+        }
+
+        // Function to update the leaderboard display
+        function updateLeaderboard() {
+            let leaderboard = leaderboardTree.getLeaderboard();
+            let output = "<h3>Leaderboard:</h3>";
+            leaderboard.forEach((player, index) => {
+                output += `<div class="leaderboard-item ${player.color}">
+                    <strong>${index + 1}. ${player.player}</strong> - ${player.score}
+                </div>`;
+            });
+            document.getElementById("leaderboard").innerHTML = output;
+        }
+
+        // Initial leaderboard update
+        updateLeaderboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary with Hashing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dictionary with Hashing</h1>
+        <label for="wordInput">Word:</label>
+        <input type="text" id="wordInput" placeholder="Enter a word">
+        <label for="definitionInput">Definition:</label>
+        <input type="text" id="definitionInput" placeholder="Enter a definition">
+        <br>
+        <button onclick="addWord()">Add Word</button>
+        <button onclick="lookupWord()">Lookup Word</button>
+        <button onclick="deleteWord()">Delete Word</button>
+        <div class="output" id="output"></div>
+    </div>
+    <script>
+        class HashTable {
+            constructor(size = 100) {
+                this.size = size;
+                this.buckets = Array(size).fill(null).map(() => []);
+            }
+
+            _hash(key) {
+                let hash = 0;
+                for (let char of key) {
+                    hash = (hash * 31 + char.charCodeAt(0)) % this.size;
+                }
+                return hash;
+            }
+
+            insert(key, value) {
+                const index = this._hash(key);
+                const bucket = this.buckets[index];
+
+                for (let i = 0; i < bucket.length; i++) {
+                    if (bucket[i][0] === key) {
+                        bucket[i][1] = value; // Update existing value
+                        return;
+                    }
+                }
+
+                bucket.push([key, value]); // Insert new key-value pair
+            }
+
+            lookup(key) {
+                const index = this._hash(key);
+                const bucket = this.buckets[index];
+
+                for (let [storedKey, storedValue] of bucket) {
+                    if (storedKey === key) {
+                        return storedValue;
+                    }
+                }
+
+                return null; // Key not found
+            }
+
+            delete(key) {
+                const index = this._hash(key);
+                const bucket = this.buckets[index];
+
+                for (let i = 0; i < bucket.length; i++) {
+                    if (bucket[i][0] === key) {
+                        bucket.splice(i, 1); // Remove the key-value pair
+                        return true;
+                    }
+                }
+
+                return false; // Key not found
+            }
+
+            display() {
+                return this.buckets
+                    .flat()
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join("\n") || "Dictionary is empty.";
+            }
+        }
+
+        const dictionary = new HashTable();
+
+        function addWord() {
+            const word = document.getElementById("wordInput").value.trim();
+            const definition = document.getElementById("definitionInput").value.trim();
+            const outputDiv = document.getElementById("output");
+
+            if (word && definition) {
+                dictionary.insert(word, definition);
+                outputDiv.textContent = `Word "${word}" added/updated successfully.`;
+            } else {
+                outputDiv.textContent = "Please enter both a word and its definition.";
+            }
+        }
+
+        function lookupWord() {
+            const word = document.getElementById("wordInput").value.trim();
+            const outputDiv = document.getElementById("output");
+
+            if (word) {
+                const definition = dictionary.lookup(word);
+                if (definition) {
+                    outputDiv.textContent = `Definition of "${word}": ${definition}`;
+                } else {
+                    outputDiv.textContent = `Word "${word}" not found in the dictionary.`;
+                }
+            } else {
+                outputDiv.textContent = "Please enter a word to lookup.";
+            }
+        }
+
+        function deleteWord() {
+            const word = document.getElementById("wordInput").value.trim();
+            const outputDiv = document.getElementById("output");
+
+            if (word) {
+                const success = dictionary.delete(word);
+                if (success) {
+                    outputDiv.textContent = `Word "${word}" deleted successfully.`;
+                } else {
+                    outputDiv.textContent = `Word "${word}" not found in the dictionary.`;
+                }
+            } else {
+                outputDiv.textContent = "Please enter a word to delete.";
+            }
+        }
+    </script>
+</body>
+</html>

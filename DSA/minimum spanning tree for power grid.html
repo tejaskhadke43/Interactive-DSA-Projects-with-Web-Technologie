@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kruskal's Algorithm - Minimum Spanning Tree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Power Grid - Kruskal's Algorithm (Minimum Spanning Tree)</h1>
+    <div class="button-container">
+        <button class="button" onclick="runKruskal()">Run Kruskal's Algorithm</button>
+    </div>
+    <div id="output"></div>
+
+    <script>
+        // Kruskal's Algorithm Implementation
+
+        // Union-Find Data Structure (Disjoint Set)
+        class UnionFind {
+            constructor(n) {
+                this.parent = Array(n).fill(0).map((_, index) => index);
+                this.rank = Array(n).fill(0);
+            }
+
+            find(x) {
+                if (this.parent[x] !== x) {
+                    this.parent[x] = this.find(this.parent[x]);
+                }
+                return this.parent[x];
+            }
+
+            union(x, y) {
+                let rootX = this.find(x);
+                let rootY = this.find(y);
+
+                if (rootX !== rootY) {
+                    // Union by rank
+                    if (this.rank[rootX] > this.rank[rootY]) {
+                        this.parent[rootY] = rootX;
+                    } else if (this.rank[rootX] < this.rank[rootY]) {
+                        this.parent[rootX] = rootY;
+                    } else {
+                        this.parent[rootY] = rootX;
+                        this.rank[rootX]++;
+                    }
+                }
+            }
+        }
+
+        // Kruskal's Algorithm to find MST
+        function kruskal(cities, edges) {
+            const uf = new UnionFind(cities.length);
+            let mst = [];
+            let totalCost = 0;
+
+            // Sort edges by weight (ascending order)
+            edges.sort((a, b) => a.weight - b.weight);
+
+            for (let edge of edges) {
+                const { city1, city2, weight } = edge;
+                const root1 = uf.find(city1);
+                const root2 = uf.find(city2);
+
+                // If cities are not in the same set, include this edge
+                if (root1 !== root2) {
+                    uf.union(root1, root2);
+                    mst.push(edge);
+                    totalCost += weight;
+                }
+            }
+
+            return { mst, totalCost };
+        }
+
+        // Define cities and edges (example data)
+        const cities = ['City A', 'City B', 'City C', 'City D', 'City E'];
+        const edges = [
+            { city1: 0, city2: 1, weight: 10 }, // A-B
+            { city1: 0, city2: 2, weight: 20 }, // A-C
+            { city1: 1, city2: 2, weight: 30 }, // B-C
+            { city1: 1, city2: 3, weight: 25 }, // B-D
+            { city1: 2, city2: 3, weight: 15 }, // C-D
+            { city1: 3, city2: 4, weight: 10 }, // D-E
+            { city1: 2, city2: 4, weight: 35 }, // C-E
+        ];
+
+        // Run Kruskal's Algorithm and display the result
+        function runKruskal() {
+            const { mst, totalCost } = kruskal(cities, edges);
+            let resultText = 'Minimum Spanning Tree (MST):\n';
+
+            // Display MST edges
+            mst.forEach(edge => {
+                resultText += `${cities[edge.city1]} <-> ${cities[edge.city2]} (Cost: ${edge.weight})\n`;
+            });
+            resultText += `\nTotal Cost of MST: ${totalCost}`;
+
+            // Show the result in the output div
+            document.getElementById('output').innerText = resultText;
+        }
+    </script>
+</body>
+</html>

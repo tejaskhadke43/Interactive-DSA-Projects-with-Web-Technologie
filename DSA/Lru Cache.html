@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRU Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .cache-display {
+            margin-top: 20px;
+            text-align: left;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LRU Cache Implementation</h1>
+        <label for="keyInput">Key:</label>
+        <input type="text" id="keyInput" placeholder="Enter key">
+        <label for="valueInput">Value:</label>
+        <input type="text" id="valueInput" placeholder="Enter value">
+        <button onclick="addToCache()">Add to Cache</button>
+        <br>
+        <label for="retrieveKey">Retrieve Key:</label>
+        <input type="text" id="retrieveKey" placeholder="Key to retrieve">
+        <button onclick="retrieveFromCache()">Retrieve</button>
+        <div class="cache-display" id="cacheDisplay"></div>
+    </div>
+    <script>
+        class Node {
+            constructor(key, value) {
+                this.key = key;
+                this.value = value;
+                this.prev = null;
+                this.next = null;
+            }
+        }
+
+        class LRUCache {
+            constructor(capacity) {
+                this.capacity = capacity;
+                this.map = new Map();
+                this.head = new Node(null, null); // Dummy head
+                this.tail = new Node(null, null); // Dummy tail
+                this.head.next = this.tail;
+                this.tail.prev = this.head;
+            }
+
+            _remove(node) {
+                // Remove a node from the doubly linked list
+                node.prev.next = node.next;
+                node.next.prev = node.prev;
+            }
+
+            _add(node) {
+                // Add a node right after the head
+                node.next = this.head.next;
+                node.prev = this.head;
+                this.head.next.prev = node;
+                this.head.next = node;
+            }
+
+            get(key) {
+                if (this.map.has(key)) {
+                    const node = this.map.get(key);
+                    this._remove(node); // Move node to the front
+                    this._add(node);
+                    return node.value;
+                }
+                return -1; // Key not found
+            }
+
+            put(key, value) {
+                if (this.map.has(key)) {
+                    this._remove(this.map.get(key));
+                } else if (this.map.size >= this.capacity) {
+                    // Remove least recently used (LRU) node
+                    const lru = this.tail.prev;
+                    this._remove(lru);
+                    this.map.delete(lru.key);
+                }
+                const newNode = new Node(key, value);
+                this._add(newNode);
+                this.map.set(key, newNode);
+            }
+
+            displayCache() {
+                let output = '';
+                let current = this.head.next;
+                while (current !== this.tail) {
+                    output += `{ ${current.key}: ${current.value} } -> `;
+                    current = current.next;
+                }
+                return output + 'END';
+            }
+        }
+
+        // Initialize the LRU Cache with a capacity of 3
+        const lruCache = new LRUCache(3);
+
+        function addToCache() {
+            const key = document.getElementById("keyInput").value;
+            const value = document.getElementById("valueInput").value;
+            if (key && value) {
+                lruCache.put(key, value);
+                displayCache();
+            } else {
+                alert("Please enter both key and value!");
+            }
+        }
+
+        function retrieveFromCache() {
+            const key = document.getElementById("retrieveKey").value;
+            if (key) {
+                const value = lruCache.get(key);
+                if (value !== -1) {
+                    alert(`Value for key "${key}": ${value}`);
+                } else {
+                    alert(`Key "${key}" not found in cache.`);
+                }
+                displayCache();
+            } else {
+                alert("Please enter a key to retrieve!");
+            }
+        }
+
+        function displayCache() {
+            const cacheDisplay = document.getElementById("cacheDisplay");
+            cacheDisplay.innerText = `Cache: ${lruCache.displayCache()}`;
+        }
+    </script>
+</body>
+</html>

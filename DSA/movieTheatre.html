@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Theater Seating Arrangement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .seat {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            display: inline-block;
+            background-color: #f0f0f0;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+        .booked {
+            background-color: #ff6347;
+            cursor: not-allowed;
+        }
+        .available {
+            background-color: #32cd32;
+        }
+        .group-booking {
+            background-color: #1e90ff;
+        }
+        #controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Movie Theater Seating Arrangement</h1>
+    <div id="seating"></div>
+
+    <div id="controls">
+        <h3>Booking Controls</h3>
+        <input type="number" id="groupSize" placeholder="Group Size" min="1" />
+        <button id="bookSeats">Book Seats</button>
+        <button id="cancelSeats">Cancel Seats</button>
+    </div>
+
+    <script>
+        const rows = 5;
+        const cols = 5;
+        const seatingArrangement = Array.from({ length: rows }, () => Array(cols).fill(null));
+
+        function renderSeating() {
+            const seatingDiv = document.getElementById('seating');
+            seatingDiv.innerHTML = '';
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat' + (seatingArrangement[i][j] === 'booked' ? ' booked' : seatingArrangement[i][j] === 'group' ? ' group-booking' : ' available');
+                    seat.innerText = `${i + 1}-${j + 1}`;
+                    seat.onclick = () => handleSeatClick(i, j);
+                    seatingDiv.appendChild(seat);
+                }
+                seatingDiv.appendChild(document.createElement('br'));
+            }
+        }
+
+        function handleSeatClick(row, col) {
+            const selectedSeat = seatingArrangement[row][col];
+            if (selectedSeat === 'booked') {
+                alert('This seat is already booked.');
+            } else if (selectedSeat === 'group') {
+                alert('This group of seats is booked. Please cancel the entire group to free them up.');
+            } else {
+                // Toggle booking for a single seat (optional)
+                // seatingArrangement[row][col] = 'booked';
+                // renderSeating();
+            }
+        }
+
+        function bookSeats() {
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+            if (isNaN(groupSize) || groupSize < 1) {
+                alert('Please enter a valid group size.');
+                return;
+            }
+
+            let seatsBooked = 0;
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    // Check for continuous available seats
+                    if (seatingArrangement[i][j] === null) {
+                        let count = 0;
+                        for (let k = j; k < cols && count < groupSize; k++) {
+                            if (seatingArrangement[i][k] === null) {
+                                count++;
+                            } else {
+                                break;
+                            }
+                        }
+                        // If enough seats are found
+                        if (count === groupSize) {
+                            for (let k = j; k < j + groupSize; k++) {
+                                seatingArrangement[i][k] = 'group';
+                                seatsBooked++;
+                            }
+                            j += groupSize - 1; // Skip the booked seats
+                            if (seatsBooked === groupSize) {
+                                alert(`Successfully booked ${groupSize} seats.`);
+                                renderSeating();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            alert('Not enough contiguous seats available.');
+        }
+
+        function cancelSeats() {
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+            if (isNaN(groupSize) || groupSize < 1) {
+                alert('Please enter a valid group size.');
+                return;
+            }
+
+            let seatsCanceled = 0;
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    // Check for a group booking
+                    if (seatingArrangement[i][j] === 'group') {
+                        let count = 0;
+                        for (let k = j; k < cols && count < groupSize; k++) {
+                            if (seatingArrangement[i][k] === 'group') {
+                                count++;
+                            } else {
+                                break;
+                            }
+                        }
+                        // If a full group is found
+                        if (count === groupSize) {
+                            for (let k = j; k < j + groupSize; k++) {
+                                seatingArrangement[i][k] = null; // Mark as available
+                                seatsCanceled++;
+                            }
+                            j += groupSize - 1; // Skip the canceled seats
+                            alert(`Successfully canceled ${groupSize} seats.`);
+                            renderSeating();
+                            return;
+                        }
+                    }
+                }
+            }
+            alert('No such group booking exists.');
+        }
+
+        document.getElementById('bookSeats').addEventListener('click', bookSeats);
+        document.getElementById('cancelSeats').addEventListener('click', cancelSeats);
+
+        // Initial render
+        renderSeating();
+    </script>
+</body>
+</html>
