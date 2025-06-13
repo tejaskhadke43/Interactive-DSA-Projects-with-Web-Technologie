@@ -25,8 +25,5 @@ No External Libraries – Pure logic, DOM manipulation, and styling
 🎶 Music Streaming Queue using Linked List
 🧩 Knapsack Problem Visualizer
 
-📂 How to Run
-Just clone/download the repository and open any .html file in your browser.
-git clone https://github.com/tejaskhadke43/Interactive-DSA-Projects-with-Web-Technologies.git
-Then, navigate to the DSA folder and explore!
+
 
